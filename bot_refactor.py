@@ -1301,25 +1301,76 @@ def get_stats_bzzoiro(fid_raw, home, away):
         r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/stats/", headers=headers, timeout=10)
         data = r.json()
         raw_stats = data.get("stats", {})
+        
+        # Bzzoiro costuma aninhar as estatísticas reais dentro de subchaves se o provider for detalhado
+        # Mas vamos primeiro tentar o mapeamento direto que estava no código
+        
         stats = {}
         any_nonzero = False
+        
+        # Mapeamento Bzzoiro para nosso padrão (h/a)
+        # Bzzoiro keys: total_shots, shots_on_target, corner_kicks, dangerous_attack, ball_possession
+        
         for side, key in [("home", "h"), ("away", "a")]:
             side_data = raw_stats.get(side, {})
-            val = int(side_data.get("total_shots", 0) or 0)
-            stats[f"chutes_tot_{key}"] = val
-            if val > 0: any_nonzero = True
-            val = int(side_data.get("shots_on_target", 0) or 0)
-            stats[f"chutes_gol_{key}"] = val
-            if val > 0: any_nonzero = True
-            val = int(side_data.get("corner_kicks", 0) or 0)
-            stats[f"escanteios_{key}"] = val
-            if val > 0: any_nonzero = True
-            val = int(side_data.get("dangerous_attack", 0) or 0)
-            stats[f"ataques_perigosos_{key}"] = val
-            if val > 0: any_nonzero = True
-            val = int(side_data.get("ball_possession", 0) or 0)
-            stats[f"posse_{key}"] = val
-            if val > 0: any_nonzero = True
+            
+            # Se side_data for apenas {"xg":...}, tenta buscar em níveis mais profundos ou fallback
+            # Alguns eventos no Bzzoiro retornam stats vazias se não houver cobertura premium
+            
+            val_tot = int(side_data.get("total_shots", 0) or 0)
+            stats[f"chutes_tot_{key}"] = val_tot
+            if val_tot > 0: any_nonzero = True
+            
+            val_gol = int(side_data.get("shots_on_target", 0) or 0)
+            stats[f"chutes_gol_{key}"] = val_gol
+            if val_gol > 0: any_nonzero = True
+            
+            val_corn = int(side_data.get("corner_kicks", 0) or 0)
+            stats[f"escanteios_{key}"] = val_corn
+            if val_corn > 0: any_nonzero = True
+            
+            val_atq = int(side_data.get("dangerous_attack", 0) or 0)
+            stats[f"ataques_perigosos_{key}"] = val_atq
+            if val_atq > 0: any_nonzero = True
+            
+            val_pos = int(side_data.get("ball_possession", 0) or 0)
+            stats[f"posse_{key}"] = val_pos
+            if val_pos > 0: any_nonzero = True
+            
+            stats[f"red_cards_{key}"] = int(side_data.get("red_cards", 0) or 0)
+            stats[f"yellow_cards_{key}"] = int(side_data.get("yellow_cards", 0) or 0)
+
+        # Fallback: Se stats vierem vazias da Bzzoiro, tenta a ESPN pelo nome dos times
+        if not any_nonzero:
+            espn_stats = get_stats_espn_by_name(home, away)
+            if espn_stats: return espn_stats
+            
+        return stats
+    except: return {}
+
+def get_stats_espn_by_name(home, away):
+    """Tenta buscar estatísticas na ESPN usando o nome dos times (quando a API principal falha)."""
+    try:
+        # 1. Busca o ID do jogo no scoreboard global da ESPN
+        url = "https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard"
+        r = requests.get(url, timeout=5)
+        if r.status_code != 200: return {}
+        
+        data = r.json()
+        target_eid = None
+        h_norm = home.lower()
+        a_norm = away.lower()
+        
+        for ev in data.get("events", []):
+            name = ev.get("name", "").lower()
+            if h_norm in name and a_norm in name:
+                target_eid = ev.get("id")
+                break
+        
+        if target_eid:
+            return get_stats_espn(target_eid)
+    except: pass
+    return {}
             cards = side_data.get("cards", {})
             if isinstance(cards, dict):
                 stats[f"red_cards_{key}"] = int(cards.get("red", 0) or 0)
@@ -1628,8 +1679,20 @@ def get_favorito_odds(home, away, fid=None, league=None):
 # ═══════════════════════════════════════════════════════════════════════════════
 # FILTRO DE JANELAS
 # ═══════════════════════════════════════════════════════════════════════════════
-def get_odd_favorito_num(home, away, fid=None, league=None):
-    """Retorna a odd decimal do favorito (numero). Usa ESPN primeiro, depois Odds API."""
+def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
+    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro se tiver fid_raw, depois ESPN, depois Odds API."""
+    if fid_raw:
+        try:
+            headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
+            r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=6)
+            if r.status_code == 200:
+                odds = r.json().get("odds", {})
+                oh = float(odds.get("home_win") or 99)
+                oa = float(odds.get("away_win") or 99)
+                if oh < 90 and oa < 90:
+                    return min(oh, oa)
+        except: pass
+    
     if fid and league:
         try:
             url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard"
@@ -2625,7 +2688,8 @@ def run():
 
         # MERCADO 1B: OVER GOL LIMITE HT (15-27 min, 0x0, odd fav ≤ 1.80, prob 1.5 FT ≥ 60%, prob 0.5 HT ≥ 50%, APPM casa/fora ≥ 0.8)
         if p == 1 and 15 <= m <= 27 and sh == 0 and sa == 0 and red_fav == 0:
-            odd_fav_num = get_odd_favorito_num(h, a, fid=fid, league=j.get("liga_slug", j.get("liga", "")))
+            fid_raw = j.get("fid_raw")
+            odd_fav_num = get_odd_favorito_num(h, a, fid=fid, league=j.get("liga_slug", j.get("liga", "")), fid_raw=fid_raw)
             
             # APPM: ataques perigosos por minuto (casa OU fora ≥ 0.8)
             appm_casa = _appm_h
