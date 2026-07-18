@@ -156,64 +156,69 @@ def analisar_e_disparar(game, stats, p, m, sh, sa, odd_h, odd_a, sent_vistos):
 
 def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_val=None, cantos_atual=0, stats=None, sh=0, sa=0, fav_final="h", odd_h=None, odd_a=None):
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
+        cantos_atual = (stats.get("escanteios_h",0) + stats.get("escanteios_a",0)) if stats else 0
         linha = cantos_atual + 0.5
-        entrada = f"Mais de {linha}\u26ef\ufe0f"
-    if mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
-        entrada = str(entrada).rstrip() + "\u26bd"
-    
+        entrada = f"Mais de {linha}🚩"
+    if mercado in ("HT", "BTTS", "OVERGOAL"):
+        entrada = str(entrada).rstrip() + "⚽️"
+
     titles = {
-        "HT": "\u26bd\ufe0f\ud83d\udd25OVER GOL INTERVALO\ud83d\udd25\u26bd\ufe0f",
-        "BTTS": "\u26bd\ufe0f\ud83d\udd25AMBAS MARCAM\ud83d\udd25\u26bd\ufe0f",
-        "OFT": "\u26bd\ufe0f\ud83d\udd25OVER 1.5 GOLS PARTIDA\ud83d\udd25\u26bd\ufe0f",
-        "OVERGOAL": "\u26bd\ufe0f\ud83d\udd25OVER GOL PARTIDA\ud83d\udd25\u26bd\ufe0f",
-        "CORNER_HT": "\ud83d\udea9\ud83d\udd25ESCANTEIO \u00c1SIAT/LMT HT\ud83d\udd25\ud83d\udea9",
-        "CORNER_FT": "\ud83d\udea9\ud83d\udd25ESCANTEIO \u00c1SIAT/LMT FT\ud83d\udd25\ud83d\udea9",
+        "HT": "⚽️🔥OVER GOL INTERVALO🔥⚽️",
+        "BTTS": "⚽️🔥AMBAS MARCAM🔥⚽️",
+        "OFT": "⚽️🔥OVER 1.5 GOLS PARTIDA🔥⚽️",
+        "OVERGOAL": "⚽️🔥OVER GOL PARTIDA🔥⚽️",
+        "CORNER_HT": "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩",
+        "CORNER_FT": "🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩",
     }
-    title = titles.get(mercado, f"\ud83d\udea9\ud83d\udd25{mercado}\ud83d\udd25\ud83d\udea9")
+    title = titles.get(mercado, f"🚩🔥{mercado}🔥🚩")
+    sep = "━━━━━━━━━━━━━━━━━━━━"
     
     stats = stats or {}
     ch_h, ch_a = stats.get("chutes_tot_h", 0), stats.get("chutes_tot_a", 0)
     al_h, al_a = stats.get("chutes_gol_h", 0), stats.get("chutes_gol_a", 0)
     cn_h, cn_a = stats.get("escanteios_h", 0), stats.get("escanteios_a", 0)
     ap_h, ap_a = stats.get("ataques_perigosos_h", 0), stats.get("ataques_perigosos_a", 0)
-    
+
     fav_nome = home if fav_final == "h" else away
     atq_fav = ap_h if fav_final == "h" else ap_a
-    
-    try:
-        min_f = float(minuto) if minuto else 1.0
-        appm_val = atq_fav / max(min_f, 1.0)
-        appm_str = f"\u26a0\ufe0f{appm_val:.2f}\u26a0\ufe0f"
-    except: appm_str, appm_val = "\u26a0\ufe0f0.00\u26a0\ufe0f", 0.0
+    min_f = float(minuto) if minuto and float(minuto) > 0 else 1.0
+    appm_val = atq_fav / min_f
 
-    if appm_val >= 1.0: alerta = "Partida Com Ritmo Intenso."
-    elif appm_val >= 0.7: alerta = "Partida Com Ritmo Acelerado."
-    elif appm_val >= 0.4: alerta = "Partida Com Ritmo M\u00e9dio."
+    # APPM numérico + Alerta de Ritmo
+    pressao_str = f"{appm_val:.2f}"
+    if appm_val >= 1.2: alerta = "Partida Com Ritmo Intenso."
+    elif appm_val >= 0.8: alerta = "Partida Com Ritmo Moderado."
+    elif appm_val >= 0.5: alerta = "Partida Com Ritmo Médio."
+    elif appm_val >= 0.3: alerta = "Partida Com Ritmo Fraco."
     else: alerta = "Partida Com Ritmo Lento."
 
-    sep = "━━━━━━━━━━━━━━━━━━━━"
     msg = (
-        f"{sep}\n<b>{title}</b>\n{sep}\n"
-        f"<b>\u26bd Placar: {placar}</b>\n<b>\ud83c\udf0d Liga: {liga}</b>\n"
-        f"<b>\ud83d\udce1 {home} x {away}</b>\n"
-        f"<b>\ud83d\udc40 ODDs: Casa {odd_h or '\u2014'} / Fora {odd_a or '\u2014'}</b>\n"
-        f"<b>\u23f2\ufe0f Minuto: {minuto}'</b>\n{sep}\n"
-        f"<b>\ud83d\udcca Estat\u00edsticas ao Vivo da Partida:</b>\n"
-        f"<b>\ud83d\ude80 Chutes Totais: {ch_h} | {ch_a}</b>\n"
-        f"<b>\ud83c\udfaf Chutes No Alvo: {al_h} | {al_a}</b>\n"
-        f"<b>\u2694\ufe0f Ataques Perigosos: {ap_h} | {ap_a}</b>\n"
-        f"<b>\ud83d\udea9 Escanteios: {cn_h} | {cn_a}</b>\n{sep}\n"
-        f"<b>\ud83d\udca1 An\u00e1lise T\u00e9cnica da Partida:</b>\n"
-        f"<b>\ud83c\udfaf Favorito: {fav_nome}</b>\n"
-        f"<b>\ud83d\udd25 Press\u00e3o APPM:{appm_str}</b>\n"
-        f"<b>\ud83d\udea8 Alerta: {alerta}</b>\n{sep}\n"
-        f"<b>\ud83d\udccc Entrada: {entrada}</b>\n"
-        f"<b>\ud83d\udcb0 ODD Recomendada: 1.70+</b>\n{sep}\n"
-        f"<b>\ud83d\udd14Jogue com Responsabilidade\ud83d\udd14</b>"
+        "<b>OPORTUNIDADE DETECTADA:</b>\n"
+        + sep + "\n"
+        + "<b>" + title + "</b>\n"
+        + sep + "\n"
+        + "<b>⚽️ Placar: " + str(placar) + "</b>\n"
+        + "<b>🌍 Liga: " + str(liga) + "</b>\n"
+        + "<b>📡 " + str(home) + " x " + str(away) + "</b>\n"
+        + "<b>⏰️ Minuto: " + str(minuto) + "'</b>\n"
+        + sep + "\n"
+        + "<b>📊 Estatísticas ao Vivo da Partida:</b>\n"
+        + "<b>🚀 Chutes Totais: " + str(ch_h) + " | " + str(ch_a) + "</b>\n"
+        + "<b>🎯 Chutes No Alvo: " + str(al_h) + " | " + str(al_a) + "</b>\n"
+        + "<b>⚔️ Ataques Perigosos: " + str(ap_h) + " | " + str(ap_a) + "</b>\n"
+        + "<b>🚩 Escanteios: " + str(cn_h) + " | " + str(cn_a) + "</b>\n"
+        + sep + "\n"
+        + "<b>💡 Análise Técnica da Partida:</b>\n"
+        + "<b>🎯 Favorito: " + fav_nome + "</b>\n"
+        + "<b>🔥 Pressão APPM:</b><b>⚠️" + pressao_str + "⚠️</b>\n"
+        + "<b>🚨 Alerta: " + alerta + "</b>\n"
+        + sep + "\n"
+        + "<b>📌 Entrada: " + str(entrada) + "</b>\n"
+        + "<b>💰 ODD Recomendada: 1.70+</b>\n"
+        + sep + "\n"
+        + "🔔<b>Jogue com Responsabilidade</b>🔔"
     )
     return msg
-
-# --- GEST\u00c3O TELEGRAM E GITHUB ---
 
 def send_telegram(msg, home="", away=""):
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
