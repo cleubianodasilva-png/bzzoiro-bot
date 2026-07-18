@@ -2558,12 +2558,9 @@ def run():
 
         elif BOT_SOURCE == "sokkerpro":
             try:
-                headers = {}  # SokkerPro
-#                 r = requests.get(f"https://sports.sokkerpro.com/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=8)
-                bz = r.json().get("odds", {})
-                odd_h = float(bz.get("home_win", 0) or 0)
-                odd_a = float(bz.get("away_win", 0) or 0)
-                if odd_h > 1 and odd_a > 1:
+                oh, oa = get_odds_sokkerpro(fid_raw)
+                if oh and oa and oh > 1 and oa > 1:
+                    odd_h, odd_a = oh, oa
                     fav_final = "h" if odd_h <= odd_a else "a"
                     fav_por_odds = True
                     print(f"[ODDS-SKP] {h} x {a} — odd Casa:{odd_h:.2f} Fora:{odd_a:.2f}")
