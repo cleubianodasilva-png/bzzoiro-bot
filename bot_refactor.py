@@ -1371,12 +1371,6 @@ def get_stats_espn_by_name(home, away):
             return get_stats_espn(target_eid)
     except: pass
     return {}
-            cards = side_data.get("cards", {})
-            if isinstance(cards, dict):
-                stats[f"red_cards_{key}"] = int(cards.get("red", 0) or 0)
-        # Se TUDO é zero, o ID não existe no Bzzoiro → retorna vazio pra ativar fallback
-        if not any_nonzero:
-            return {}
         return stats
     except: return {}
 
