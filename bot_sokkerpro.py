@@ -1252,19 +1252,26 @@ def get_jogos_sokkerpro(fids_existentes):
             for fix in cat['fixtures']:
                 fid = str(fix.get('fixtureId', ''))
                 if not fid or fid in fids_existentes: continue
-                
+                status = fix.get('status', '')
                 minuto = _get_int(fix.get('minute', 0))
-                period = _get_int(fix.get('period', 0))
-                
+                # Mapear status para period numerico
+                if status in ('FT', 'PEN'): continue  # ignorar finalizados
+                if status == '2nd': period = 2
+                elif status == '1st': period = 1
+                elif status == 'HT': period = 1
+                elif status == 'NS': period = 0
+                else: period = 0
+                # Só incluir se tiver dados basicos
+                if status == 'NS' and not minuto: continue
                 jogos.append({
                     "fid": fid,
-                    "home": fix.get('home_team_name', 'Home'),
-                    "away": fix.get('away_team_name', 'Away'),
-                    "minuto": minuto,
+                    "home": fix.get('localTeamName', 'Home'),
+                    "away": fix.get('visitorTeamName', 'Away'),
+                    "minuto": minuto or _get_int(fix.get('minutePrimeiroTempo', 0)) or _get_int(fix.get('minuteSegundoTempo', 0)),
                     "period": period,
-                    "sh": _get_int(fix.get('home_score', 0)),
-                    "sa": _get_int(fix.get('away_score', 0)),
-                    "liga": fix.get('league_name', 'Liga'),
+                    "sh": _get_int(fix.get('scoresLocalTeam', 0)),
+                    "sa": _get_int(fix.get('scoresVisitorTeam', 0)),
+                    "liga": fix.get('leagueName', 'Liga'),
                     "source": "sokkerpro"
                 })
     except: pass
