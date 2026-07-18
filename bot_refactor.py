@@ -1976,11 +1976,19 @@ def gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual=0):
     return f"Jogo equilibrado, ambas criando chances — {chutes_h} chutes de Casa x {chutes_a} de Fora{posse_txt}{vermelho}"
 
 def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_val=None, cantos_atual=0, stats=None, sh=0, sa=0, fav_final="h", odd_h=None, odd_a=None, odd_b365=None, odd_bano=None):
+    # Definir a entrada com o caractere correto no final
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         linha = cantos_atual + 0.5
-        entrada = f"Mais de {linha}⛳️" # No gráfico parece ser uma bandeira, mas no sinal costuma ser ⛳️ ou 🚩. A imagem usa 🚩.
-    
-    # Extração de stats
+        entrada = f"Mais de {linha}🚩"
+    elif mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
+        if "Over" not in str(entrada) and "Ambas" not in str(entrada):
+            # Fallback caso a entrada venha crua
+            if mercado == "OFT": entrada = "Over 1.5"
+            elif mercado == "BTTS": entrada = "Ambas Marcam"
+            elif mercado == "HT": entrada = "Over 0.5"
+        entrada = f"{entrada}⚽️"
+
+    # Extração de estatísticas
     chutes_h = stats.get("chutes_tot_h", 0) if stats else 0
     chutes_a = stats.get("chutes_tot_a", 0) if stats else 0
     alvo_h   = stats.get("chutes_gol_h", 0) if stats else 0
@@ -1995,75 +2003,70 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     appm = round(atq_max / minuto, 2) if minuto > 0 else 0
     quem = "do Mandante" if atq_per_h > atq_per_a else ("do Visitante" if atq_per_a > atq_per_h else "de ambas equipes")
     
-    # Thresholds do Usuário + Fallbacks
-    if appm >= 2.0:
-        alerta = "Partida Com Pressão Constante."
-    elif appm >= 1.5:
-        alerta = "Partida Pegando Fogo."
-    elif appm >= 1.0:
-        alerta = "Partida Com Ritmo Intenso."
-    elif appm >= 0.8:
-        alerta = f"Partida com pressão {quem}."
-    elif appm >= 0.7:
-        alerta = "Partida Com Ritmo Moderado."
-    elif appm >= 0.6:
-        # Lógica da imagem: APPM 0.62 -> "Pressão crescente do Mandante no 2º tempo."
+    # Thresholds de Alerta
+    if appm >= 1.0: alerta = f"Pressão muito alta! Forte domínio {quem}."
+    elif appm >= 0.6: 
         periodo = "1º tempo" if minuto <= 45 else "2º tempo"
         alerta = f"Pressão crescente {quem} no {periodo}."
-    elif appm >= 0.5:
-        alerta = "Partida Com Ritmo Médio."
-    elif appm >= 0.3:
-        alerta = "Partida Com Ritmo Fraco."
-    else:
-        alerta = "Partida Com Ritmo Muito Fraco 👇"
+    elif appm >= 0.5: alerta = f"Domínio absoluto {quem} no {'1º' if minuto <= 45 else '2º'} tempo."
+    else: alerta = "Partida com ritmo moderado."
 
-    # Títulos exatos
-    titles = {
-        "HT": "OVER GOL INTERVALO",
-        "LIMITEHT": "OVER GOL LIMITE HT",
-        "BTTS": "AMBAS MARCAM",
-        "OFT": "OVER 1.5 GOLS PARTIDA",
-        "OVERGOAL": "OVER GOL PARTIDA",
-        "CORNER_HT": "ESCANTEIO ÁSIAT/LMT HT",
-        "CORNER_FT": "ESCANTEIO ÁSIAT/LMT FT",
-    }
-    t_core = titles.get(mercado, mercado)
+    # Títulos com os emojis exatos das imagens
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
-        title = f"🚩🔥{t_core}🔥🚩"
+        title = f"🚩🔥{mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')}🔥🚩"
     else:
-        title = f"⚽️🔥{t_core}🔥⚽️"
+        titles_map = {
+            "HT": "OVER GOL INTERVALO",
+            "LIMITEHT": "OVER GOL LIMITE HT",
+            "BTTS": "AMBAS MARCAM",
+            "OFT": "OVER 1.5 GOLS PARTIDA",
+            "OVERGOAL": "OVER GOL PARTIDA"
+        }
+        title = f"⚽️🔥{titles_map.get(mercado, mercado)}🔥⚽️"
 
     fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
-    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.50")
-    sep = "____________________________________"
+    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
+    
+    # Separador solicitado no USER.md e visível nas imagens
+    sep = "━━━━━━━━━━━━━━━━━━━━"
 
     msg = (
-        "<b>OPORTUNIDADE IDENTIFICADA</b>\n"
+        "OPORTUNIDADE IDENTIFICADA\n"
         f"{sep}\n\n"
         f"<b>{title}</b>\n"
         f"{sep}\n\n"
         f"⚽️ Placar: {placar}\n"
         f"🌍 Liga: {liga}\n"
-        f"⚔️ {home} x {away}\n"
+        f"🛰 {home} x {away}\n"
         f"👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}\n"
-        f"⏱️ Minuto: {minuto}'\n"
-        f"{sep}\n\n"
-        f"<b>📊 Estatísticas ao Vivo da Partida:</b>\n"
+        f"⏱ Minuto: {minuto}'\n"
+        f"\n{sep}\n\n"
+        f"📊 Estatísticas ao Vivo da Partida:\n"
         f"🚀 Chutes Totais: {chutes_h} | {chutes_a}\n"
         f"🎯 Chutes No Alvo: {alvo_h} | {alvo_a}\n"
         f"⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}\n"
         f"🚩 Escanteios: {cant_h} | {cant_a}\n"
         f"{sep}\n\n"
-        f"<b>💡 Análise Técnica da Partida:</b>\n"
+        f"💡 Análise Técnica da Partida:\n"
         f"🎯 Favorito: {fav_nome}\n"
         f"🔥 Pressão APPM: ⚠️ {appm} ⚠️\n"
         f"🚨 Alerta: {alerta}\n"
         f"{sep}\n\n"
         f"📌 Entrada: {entrada}\n"
         f"💰 ODD Recomendada: {odd_rec}+\n"
-        f"{sep}\n\n"
+        f"\n{sep}\n\n"
         "🔔Jogue com responsabilidade🔔"
     )
+
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+            ]
+        ]
+    }
+    return msg, keyboard
 
     keyboard = {
         "inline_keyboard": [
