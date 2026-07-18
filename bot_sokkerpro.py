@@ -1308,9 +1308,17 @@ def get_odds_sokkerpro(fid_raw):
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
                 if str(fix.get('fixtureId', '')) == str(fid_raw):
-                    oh = _get_float(fix.get('odds_home_win'))
-                    oa = _get_float(fix.get('odds_away_win'))
-                    return (oh, oa)
+                    # XBET_VENCEDOR_HOME/AWAY = odds pré-live (disponível sempre)
+                    oh = _get_float(fix.get('XBET_VENCEDOR_HOME'))
+                    oa = _get_float(fix.get('XBET_VENCEDOR_AWAY'))
+                    if oh > 1 and oa > 1:
+                        return (oh, oa)
+                    # Fallback: BET365_VENCEDOR_1_LIVE/2_LIVE = odds ao vivo
+                    oh = _get_float(fix.get('BET365_VENCEDOR_1_LIVE'))
+                    oa = _get_float(fix.get('BET365_VENCEDOR_2_LIVE'))
+                    if oh > 1 and oa > 1:
+                        return (oh, oa)
+                    return (None, None)
     except: pass
     return (None, None)
 
