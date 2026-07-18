@@ -2011,7 +2011,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>🌍 Liga:</b> <b>" + str(liga) + "</b>\n"
         + "📡 <b>" + str(home) + "</b> x <b>" + str(away) + "</b>\n"
         + "<b>👀 ODDs:</b> <b>Casa " + (f"{odd_h:.2f}" if odd_h else "—") + " / Fora " + (f"{odd_a:.2f}" if odd_a else "—") + "</b>\n"
-        + "<b>⏰ Minuto:</b> <b>" + str(minuto) + "'</b>\n"
+        + "<b>⏱ Minuto:</b> <b>" + str(minuto) + "'</b>\n"
         + sep + "\n"
         + "📊 <b>Estatísticas ao Vivo da Partida:</b>\n"
         + "<b>🚀 Chutes Totais:</b> <b>" + str(chutes_h) + " | " + str(chutes_a) + "</b>\n"
@@ -2025,6 +2025,10 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>🚨 Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
+        + sep + "\n"
+        + ("💰 ODD Recomendada: <b>" + (f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "")) + "+</b>\n" if (odd_b365 or odd_bano) else "")
+        + sep + "\n"
+        + "<b>🔔Jogue com responsabilidade🔔</b>\n"
     )
     keyboard = {
         "inline_keyboard": [
