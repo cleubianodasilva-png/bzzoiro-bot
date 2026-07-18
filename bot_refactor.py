@@ -2029,126 +2029,102 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
     
     # ════════════════════════════════════════════════════════════════
-    # THRESHOLDS DO CLEUBIANO — APPM PURO (INTENSIDADE BASE)
+    # THRESHOLDS CLEUBIANO — INTENSIDADE BASE (APPM puro)
     # ════════════════════════════════════════════════════════════════
-    if appm_val >= 1.0:
-        nivel_pressao = "muito alta"
-        intensidade = "Pressão muito alta!"
-    elif appm_val >= 0.6:
-        nivel_pressao = "alta"
-        intensidade = "Pressão crescente"
+    if appm_val >= 2.0:
+        intensidade = "Partida Com Pressão Constante"
+    elif appm_val >= 1.5:
+        intensidade = "Partida Pegando Fogo"
+    elif appm_val >= 1.0:
+        intensidade = "Partida Com Ritmo Intenso"
+    elif appm_val >= 0.8:
+        intensidade = f"Partida com pressão {quem}"
+    elif appm_val >= 0.7:
+        intensidade = "Partida Com Ritmo Moderado"
     elif appm_val >= 0.5:
-        nivel_pressao = "moderada"
-        intensidade = "Partida com bastante pressão"
+        intensidade = "Partida Com Ritmo Médio"
+    elif appm_val >= 0.3:
+        intensidade = "Partida Com Ritmo Fraco"
     else:
-        nivel_pressao = "baixa"
-        intensidade = "Partida com ritmo moderado"
+        intensidade = "Partida Com Ritmo Muito Baixo"
     
     # ════════════════════════════════════════════════════════════════
-    # THRESHOLDS DA ZAPIA — REFINAMENTO POR MERCADO (CONTEXTO)
+    # REFINAMENTO ZAPIA — CONTEXTO POR MERCADO
     # ════════════════════════════════════════════════════════════════
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         if "HT" in mercado:
-            # ESCANTEIO HT — foco em cantos no 1º tempo
             if total_cant >= 7:
-                alerta = f"Total de {total_cant} escanteios no 1º tempo — volume alto para HT."
+                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — volume alto para HT."
             elif total_cant >= 5:
-                alerta = f"Total de {total_cant} escanteios no 1º tempo — boa movimentação de cantos."
+                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — boa movimentação de cantos."
             elif appm_val >= 0.8:
-                alerta = f"Pressão ofensiva elevada no 1º tempo — {total_cant} escanteios com potencial de aumento."
+                alerta = f"{intensidade} | Pressão ofensiva elevada — {total_cant} escanteios com potencial de aumento."
             else:
-                alerta = f"Total de {total_cant} escanteios no 1º tempo — expectativa para mais cantos."
+                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — expectativa para mais cantos."
         else:
-            # ESCANTEIO FT — foco em cantos acumulados na partida
             if total_cant >= 12:
-                alerta = f"Total de {total_cant} escanteios na partida — volume muito alto para FT."
+                alerta = f"{intensidade} | {total_cant} escanteios na partida — volume muito alto para FT."
             elif total_cant >= 9:
-                alerta = f"Total de {total_cant} escanteios na partida — bom volume para mais cantos no FT."
+                alerta = f"{intensidade} | {total_cant} escanteios na partida — bom volume para mais cantos no FT."
             elif appm_val >= 0.8:
-                alerta = f"Pressão ofensiva no 2º tempo — {cant_h+cant_a} escanteios no total, tendência de aumento."
+                alerta = f"{intensidade} | Pressão ofensiva no 2º tempo — {total_cant} escanteios, tendência de aumento."
             else:
-                alerta = f"Total de {total_cant} escanteios na partida — {cant_h}x{cant_a} com potencial para ultrapassar a linha."
+                alerta = f"{intensidade} | {total_cant} escanteios na partida — {cant_h}x{cant_a} com potencial para ultrapassar a linha."
     
     elif mercado == "HT":
-        if jogo_aberto and appm_val >= 0.6:
+        if jogo_aberto and appm_val >= 0.8:
             if alvo_h >= 1 and alvo_a >= 1:
-                alerta = f"Pressão muito alta! Ambas equipes finalizando no alvo no 1º tempo."
-            elif alvo_h >= 1:
-                alerta = f"Pressão muito alta! {dominante} finalizando no alvo no 1º tempo."
+                alerta = f"{intensidade} | Ambas equipes finalizando no alvo no 1º tempo."
+            elif alvo_h >= 1 or alvo_a >= 1:
+                alerta = f"{intensidade} | {dominante} finalizando no alvo no 1º tempo."
             else:
-                alerta = f"Pressão crescente! Alta intensidade de chutes no 1º tempo."
+                alerta = f"{intensidade} | Alta intensidade de chutes no 1º tempo."
+        elif appm_val >= 0.5 and total_chutes >= 8:
+            alerta = f"{intensidade} | {total_chutes} chutes no 1º tempo — pressão para gol."
         elif appm_val >= 0.5:
-            if total_chutes >= 8:
-                alerta = f"Partida com bastante pressão! {total_chutes} chutes no 1º tempo."
-            elif atq_per_h >= 15 or atq_per_a >= 15:
-                alerta = f"Partida com bastante pressão! {dominante} dominando no 1º tempo."
-            else:
-                alerta = f"Partida com bastante pressão {quem} no 1º tempo."
+            alerta = f"{intensidade} | {dominante} dominando as ações ofensivas no 1º tempo."
+        elif total_alvo >= 3:
+            alerta = f"{intensidade} | {total_chutes} chutes, {total_alvo} no alvo no 1º tempo."
         else:
-            if total_alvo >= 3:
-                alerta = f"Jogo movimentado — {total_chutes} chutes, {total_alvo} no alvo no 1º tempo."
-            else:
-                alerta = f"Jogo movimentado com chances — {total_chutes} chutes no 1º tempo."
+            alerta = f"{intensidade} | {total_chutes} chutes no 1º tempo — jogo movimentado."
     
     elif mercado == "BTTS":
-        if appm_val >= 0.6:
+        if appm_val >= 0.8:
             if alvo_h >= 2 and alvo_a >= 1:
-                alerta = f"Pressão crescente! Ambas equipes com finalizações no alvo."
-            elif alvo_h >= 2 or alvo_a >= 2:
-                alerta = f"Pressão crescente! Um dos lados finalizando muito no alvo."
+                alerta = f"{intensidade} | Ambas equipes com finalizações no alvo."
             else:
-                alerta = f"Pressão crescente! Ambas equipes atacando com frequência."
+                alerta = f"{intensidade} | Ambas equipes atacando com frequência."
         elif appm_val >= 0.5:
             if total_alvo >= 4:
-                alerta = f"Jogo aberto! {total_alvo} finalizações no alvo — ambas marcam bem projetado."
-            elif atq_per_h >= 12 and atq_per_a >= 10:
-                alerta = f"Partida com bastante pressão dos dois lados!"
+                alerta = f"{intensidade} | {total_alvo} finalizações no alvo — ambas marcam bem projetado."
             else:
-                alerta = f"Partida com bastante pressão! Ambas equipes com volume de ataque."
+                alerta = f"{intensidade} | Ambas equipes com volume de ataque."
         else:
-            if total_chutes >= 15:
-                alerta = f"Jogo aberto com muitas finalizações — {total_chutes} chutes."
-            else:
-                alerta = f"Ambas equipes com volume de ataque — expectativa de gols dos dois lados."
+            alerta = f"{intensidade} | Ambas equipes com volume de ataque — expectativa de gols dos dois lados."
     
     elif mercado == "OFT":
-        if appm_val >= 0.6 and total_chutes >= 10:
-            if placar in ("1x0", "0x1"):
-                alerta = f"Pressão crescente no 2º tempo — placar em {placar} com {total_chutes} chutes | Mais um gol esperado."
-            else:
-                alerta = f"Pressão crescente! Jogo com {total_chutes} finalizações — forte tendência de mais gols."
+        if appm_val >= 0.8 and total_chutes >= 10:
+            alerta = f"{intensidade} | {total_chutes} chutes no 2º tempo — forte tendência de mais gols."
+        elif appm_val >= 0.5 and total_atq >= 20:
+            alerta = f"{intensidade} | {total_atq} ataques perigosos — Over 1.5 com boa projeção."
         elif appm_val >= 0.5:
-            if total_atq >= 20:
-                alerta = f"Partida com bastante pressão! {total_atq} ataques perigosos — Over 1.5 com boa projeção."
-            else:
-                alerta = f"Partida com bastante pressão — {total_chutes} chutes em {minuto}' | Over 1.5."
+            alerta = f"{intensidade} | {total_chutes} chutes em {minuto}' — Over 1.5."
         else:
-            if total_alvo >= 4:
-                alerta = f"Bons números ofensivos — {total_alvo} no alvo em {minuto}' | Over 1.5 com potencial."
-            else:
-                alerta = f"Partida com {total_chutes} chutes — placar deve se mover para Over 1.5."
+            alerta = f"{intensidade} | {total_chutes} chutes, {total_alvo} no alvo — placar deve se mover para Over 1.5."
     
     elif mercado == "OVERGOAL":
-        if jogo_aberto and appm_val >= 0.6:
-            alerta = f"Pressão crescente! Jogo 0x0 mas aberto — {total_chutes} chutes, {total_atq} ataques perigosos."
+        if jogo_aberto and appm_val >= 0.8:
+            alerta = f"{intensidade} | Jogo 0x0 mas aberto — {total_chutes} chutes, {total_atq} ataques perigosos."
+        elif appm_val >= 0.5 and total_atq >= 15:
+            alerta = f"{intensidade} | Time dominando e placar ainda 0x0 — Gol esperado."
         elif appm_val >= 0.5:
-            if total_atq >= 15:
-                alerta = f"Partida com bastante pressão! Time dominando e placar ainda 0x0 — Gol esperado."
-            else:
-                alerta = f"Partida com bastante pressão! Expectativa de gol com base no volume ofensivo."
+            alerta = f"{intensidade} | Expectativa de gol com base no volume ofensivo."
         else:
-            alerta = f"Expectativa de gol — {total_chutes} chutes, {total_atq} ataques perigosos no 2º tempo."
+            alerta = f"{intensidade} | {total_chutes} chutes, {total_atq} ataques perigosos — expectativa de gol."
     
     else:
-        # Fallback: APPM puro
-        if appm_val >= 1.0:
-            alerta = f"Pressão muito alta! Forte domínio {quem}."
-        elif appm_val >= 0.6:
-            alerta = f"Pressão crescente {quem} no {periodo}."
-        elif appm_val >= 0.5:
-            alerta = f"Partida com bastante pressão {quem}."
-        else:
-            alerta = "Partida com ritmo moderado."
+        # Fallback: só a intensidade
+        alerta = intensidade
 
     # APPM para exibição no layout
     appm = appm_val
