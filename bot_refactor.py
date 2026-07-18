@@ -1976,13 +1976,12 @@ def gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual=0):
     return f"Jogo equilibrado, ambas criando chances — {chutes_h} chutes de Casa x {chutes_a} de Fora{posse_txt}{vermelho}"
 
 def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_val=None, cantos_atual=0, stats=None, sh=0, sa=0, fav_final="h", odd_h=None, odd_a=None, odd_b365=None, odd_bano=None):
-    # Definir a entrada com o caractere correto no final
+    # Definir a entrada conforme os layouts das imagens
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         linha = cantos_atual + 0.5
         entrada = f"Mais de {linha}🚩"
     elif mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
         if "Over" not in str(entrada) and "Ambas" not in str(entrada):
-            # Fallback caso a entrada venha crua
             if mercado == "OFT": entrada = "Over 1.5"
             elif mercado == "BTTS": entrada = "Ambas Marcam"
             elif mercado == "HT": entrada = "Over 0.5"
@@ -2002,16 +2001,19 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     atq_max = max(atq_per_h, atq_per_a)
     appm = round(atq_max / minuto, 2) if minuto > 0 else 0
     quem = "do Mandante" if atq_per_h > atq_per_a else ("do Visitante" if atq_per_a > atq_per_h else "de ambas equipes")
+    periodo = "1º tempo" if minuto <= 45 else "2º tempo"
     
-    # Thresholds e Alertas idênticos à imagem (media/1784355200105.jpg)
+    # Lógica de Alerta idêntica aos prints
     if appm >= 1.0: 
         alerta = f"Pressão muito alta! Forte domínio {quem}."
+    elif appm >= 0.6:
+        alerta = f"Pressão crescente {quem} no {periodo}."
     elif appm >= 0.5:
         alerta = f"Partida com bastante pressão {quem}."
     else:
         alerta = "Partida com ritmo moderado."
 
-    # Título EXATO com as setas vermelhas e fogo (Emoji de bandeira triangular 🚩)
+    # Títulos exatos (Sem espaços extras, emojis corretos)
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
         title = f"🚩🔥{nome_m}🔥🚩"
@@ -2027,37 +2029,46 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
 
     fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
     odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
-    
-    # Separador solicitado no USER.md e visível nas imagens
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
+    # Layout reconstruído seguindo os espaçamentos e emojis dos prints
     msg = (
         "OPORTUNIDADE IDENTIFICADA\n"
-        f"{sep}\n\n"
+        f"{sep}\n"
         f"<b>{title}</b>\n"
         f"{sep}\n\n"
         f"⚽️ Placar: {placar}\n"
         f"🌍 Liga: {liga}\n"
-        f"🛰 {home} x {away}\n"
+        f"📡 {home} x {away}\n"
         f"👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}\n"
-        f"⏱ Minuto: {minuto}'\n"
-        f"\n{sep}\n\n"
+        f"⏱ Minuto: {minuto}'\n\n"
+        f"{sep}\n"
         f"📊 Estatísticas ao Vivo da Partida:\n"
         f"🚀 Chutes Totais: {chutes_h} | {chutes_a}\n"
         f"🎯 Chutes No Alvo: {alvo_h} | {alvo_a}\n"
         f"⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}\n"
         f"🚩 Escanteios: {cant_h} | {cant_a}\n"
-        f"{sep}\n\n"
+        f"{sep}\n"
         f"💡 Análise Técnica da Partida:\n"
         f"🎯 Favorito: {fav_nome}\n"
         f"🔥 Pressão APPM: ⚠️ {appm} ⚠️\n"
         f"🚨 Alerta: {alerta}\n"
         f"{sep}\n\n"
         f"📌 Entrada: {entrada}\n"
-        f"💰 ODD Recomendada: {odd_rec}+\n"
-        f"\n{sep}\n\n"
+        f"💰 ODD Recomendada: {odd_rec}+\n\n"
+        f"{sep}\n"
         "🔔Jogue com responsabilidade🔔"
     )
+
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+            ]
+        ]
+    }
+    return msg, keyboard
 
     keyboard = {
         "inline_keyboard": [
