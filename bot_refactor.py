@@ -1965,15 +1965,13 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
 
     sep = "━━━━━━━━━━━━━━━━━━━━"
     
-    # --- ANALISE DINAMICA (APPM - Ataques Perigosos Por Minuto do TIME DOMINANTE) ---
-    # Pressão e alerta baseados exclusivamente no time com MAIS ataques perigosos
+    # ─── ANÁLISE DINÂMICA (APPM - Ataques Perigosos Por Minuto do TIME DOMINANTE) ───
     atq_dominante = max(atq_perig_h, atq_perig_a)
     if minuto > 0:
         appm_dominante = round(atq_dominante / minuto, 2)
     else:
         appm_dominante = 0
 
-    # Alerta dinâmico baseado EXCLUSIVAMENTE no APPM do time dominante
     # Decide quem está pressionando mais
     if atq_perig_h > atq_perig_a:
         quem_pressiona = "do Mandante"
@@ -1982,17 +1980,31 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         quem_pressiona = "de ambas equipes"
 
-    if appm_dominante >= 2.0:
-        alerta = "Partida pegando fogo."
-    elif appm_dominante >= 1.2:
-        alerta = "Partida com ritmo intenso."
-    elif appm_dominante >= 0.7:
-        alerta = f"Partida com bastante pressão {quem_pressiona}."
-    elif appm_dominante >= 0.4:
-        alerta = "Partida com ritmo moderado."
+    # Alerta dinâmico baseado no APPM do time dominante
+    if minuto >= 45:
+        periodo_suffix = " no 2º tempo"
     else:
-        alerta = "Partida com ritmo baixo."
+        periodo_suffix = ""
+
+    if appm_dominante >= 1.0:
+        alerta = "Pressão muito alta! Forte domínio " + quem_pressiona + "."
+    elif appm_dominante >= 0.7:
+        alerta = "Partida com bastante pressão " + quem_pressiona + "."
+    elif appm_dominante >= 0.5:
+        if minuto >= 45:
+            alerta = "Pressão crescente " + quem_pressiona + " no 2º tempo."
+        else:
+            alerta = "Partida com domínio consistente " + quem_pressiona + "."
+    elif appm_dominante >= 0.3:
+        alerta = "Jogo aberto! Ambas as equipes atacando com intensidade."
+    else:
         alerta = "Partida com ritmo ofensivo muito baixo 👇"
+
+    # Emoji do minuto: ⏰️ pra mercados de gol (HT e OVERGOAL), ⏱ pros demais
+    if mercado in ("HT", "OVERGOAL"):
+        minuto_emoji = "⏰\ufe0f"
+    else:
+        minuto_emoji = "⏱"
 
     if fav_final == "h":
         fav_nome = home
@@ -2001,7 +2013,12 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         fav_nome = "—"
 
-    # Mapeia mercado → campo da API
+    # ODD Recomendada: pega Bet365, senão Bzzoiro, senão nada
+    odd_rec = ""
+    if odd_b365:
+        odd_rec = f"{odd_b365:.2f}"
+    elif odd_bano:
+        odd_rec = f"{odd_bano:.2f}"
 
     msg = (
         sep + "\n"
@@ -2011,7 +2028,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>🌍 Liga:</b> <b>" + str(liga) + "</b>\n"
         + "📡 <b>" + str(home) + "</b> x <b>" + str(away) + "</b>\n"
         + "<b>👀 ODDs:</b> <b>Casa " + (f"{odd_h:.2f}" if odd_h else "—") + " / Fora " + (f"{odd_a:.2f}" if odd_a else "—") + "</b>\n"
-        + "<b>⏱ Minuto:</b> <b>" + str(minuto) + "'</b>\n"
+        + "<b>" + minuto_emoji + " Minuto:</b> <b>" + str(minuto) + "'</b>\n"
         + sep + "\n"
         + "📊 <b>Estatísticas ao Vivo da Partida:</b>\n"
         + "<b>🚀 Chutes Totais:</b> <b>" + str(chutes_h) + " | " + str(chutes_a) + "</b>\n"
@@ -2025,10 +2042,9 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>🚨 Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
+        + (sep + "\n" + "💰 ODD Recomendada: <b>" + odd_rec + "+</b>\n" if odd_rec else "")
         + sep + "\n"
-        + ("💰 ODD Recomendada: <b>" + (f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "")) + "+</b>\n" if (odd_b365 or odd_bano) else "")
-        + sep + "\n"
-        + "<b>🔔Jogue com responsabilidade🔔</b>\n"
+        + "<b>🔔Jogue com Responsabilidade🔔</b>\n"
     )
     keyboard = {
         "inline_keyboard": [
