@@ -513,7 +513,7 @@ def send_telegram(msg, botoes=True, reply_to=None, marca=None, home="", away="",
 # ARQUIVOS LOCAIS
 # ═══════════════════════════════════════════════════════════════════════════════
 GITHUB_TOKEN = os.environ.get("GH_PAT", "")
-GITHUB_REPO  = os.environ.get("GITHUB_REPOSITORY", "cleubianodasilva-png/bzzoiro-bot")
+GITHUB_REPO  = os.environ.get("GITHUB_REPOSITORY", "cleubianodasilva-png/boot-ia-inteligente-bot")
 SENT_API_PATH        = "sent_live_signals.json"
 RESULTADO_API_PATH   = "resultados.json"
 PERFORMANCE_API_PATH = "performance.json"
@@ -1975,44 +1975,22 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         cantos_por_min = 0
         atq_perig_por_min = 0
 
-    # APPM individual por time
-    appm_h = round(atq_perig_h / minuto, 2) if minuto > 0 else 0
-    appm_a = round(atq_perig_a / minuto, 2) if minuto > 0 else 0
-
-    # Time dominante = o que tem mais ataques perigosos
-    if atq_perig_h >= atq_perig_a:
-        appm_dominante = appm_h
+    # Pressão baseada exclusivamente no APPM da partida (total)
+    if atq_perig_por_min >= 1.8:
+        pressao = "Altíssima 🔥🔥"
+    elif atq_perig_por_min >= 1.0:
+        pressao = "Alta 🔥"
+    elif atq_perig_por_min >= 0.7:
+        pressao = "Moderada 💪"
+    elif atq_perig_por_min >= 0.5:
+        pressao = "Média ✅"
+    elif atq_perig_por_min >= 0.3:
+        pressao = "Baixa 👎"
     else:
-        appm_dominante = appm_a
+        pressao = "Muito Baixa 👇"
 
-    # Pressão baseada no APPM do time dominante
-    if appm_dominante >= 1.8:
-        pressao_val = appm_dominante
-        emoji_pressao = "🔥🔥"
-        alerta_appm = f"Partida com pressão ofensiva altíssima — {appm_dominante} APPM"
-    elif appm_dominante >= 1.0:
-        pressao_val = appm_dominante
-        emoji_pressao = "🔥"
-        alerta_appm = f"Partida com pressão ofensiva alta — {appm_dominante} APPM"
-    elif appm_dominante >= 0.7:
-        pressao_val = appm_dominante
-        emoji_pressao = "💪"
-        alerta_appm = f"Partida com bom ritmo ofensivo — {appm_dominante} APPM"
-    elif appm_dominante >= 0.5:
-        pressao_val = appm_dominante
-        emoji_pressao = "✅"
-        alerta_appm = f"Partida com ritmo moderado — {appm_dominante} APPM"
-    elif appm_dominante >= 0.3:
-        pressao_val = appm_dominante
-        emoji_pressao = "👎"
-        alerta_appm = f"Partida com baixo volume ofensivo — {appm_dominante} APPM"
-    else:
-        pressao_val = appm_dominante
-        emoji_pressao = "👇"
-        alerta_appm = f"Partida muito parada — {appm_dominante} APPM"
-
-    # Alerta baseado no APPM da partida — ritmo ofensivo em tempo real
-    alerta = alerta_appm
+    # Substitui alerta antigo pela análise técnica completa com ataques perigosos
+    alerta = gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual)
 
     if fav_final == "h":
         fav_nome = home
@@ -2041,7 +2019,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + sep + "\n"
         + "<b>💡 Análise Técnica da Partida:</b>\n"
         + "<b>🎯 Favorito:</b> <b>" + str(fav_nome) + "</b>\n"
-        + "<b>🔥 Pressão APPM:</b> <b>⚠️" + str(pressao_val) + "⚠️ " + emoji_pressao + "</b>\n"
+        + "<b>🔥 Pressão:</b> <b>" + pressao + "</b>\n"
         + "<b>⚠️ Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
@@ -2272,17 +2250,31 @@ def get_media_gols_historica(home_id, away_id):
 # LOOP PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════════
 def run():
-    print("[Iniciando monitoramento — BZZOIRO]")
+    print("[Iniciando monitoramento — ESPN + apifootball + Odds API]")
     sent      = load_sent()
     total_env = 0
     # janela_id por hora — evita duplicata mesmo se Actions rodar 2x no mesmo minuto
     janela_id = datetime.now(BRT).strftime('%Y%m%d%H')
 
     # ─────────────────────────────────────────────────────────────
-    # PASSO 1: apifootball — única fonte
+    # PASSO 1A: apifootball — 1ª fonte de jogos (mais completa)
     # ─────────────────────────────────────────────────────────────
-    jogos_live = get_jogos_bzzoiro(set())
-    print(f"[Total] {len(jogos_live)} jogos ao vivo (Bzzoiro)")
+    jogos_apif = get_jogos_apifootball_v3(set())
+    fids_apif  = {j["fid"] for j in jogos_apif}
+
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 1B: ESPN — 2ª fonte, complementa o que apifootball não cobriu
+    # ─────────────────────────────────────────────────────────────
+    jogos_espn = get_jogos_espn(fids_apif)
+
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 1C: Bzzoiro — 3ª fonte, preenche o que faltar
+    # ─────────────────────────────────────────────────────────────
+    jogos_bzz = get_jogos_bzzoiro(fids_apif | {j["fid"] for j in jogos_espn})
+
+    # Junta tudo na ordem: apifootball > ESPN > Bzzoiro
+    jogos_live = jogos_apif + jogos_espn + jogos_bzz
+    print(f"[Total] {len(jogos_live)} jogos ao vivo (apifootball={len(jogos_apif)} + ESPN={len(jogos_espn)} + bzzoiro={len(jogos_bzz)})")
 
     # PASSO 2: Filtra janelas alvo
     jogos_na_janela = filtrar_janelas(jogos_live)
@@ -2520,6 +2512,9 @@ def run():
 
         red_fav = stats.get(f"red_cards_{fav_final}", 0) if stats else 0
 
+        # ─── DIAGNÓSTICO INICIAL DO JOGO ───
+        print(f"[DIAG] {h} x {a} | placar={placar} | min={m} | periodo={p} | fav={fav_final} | gols_fav={fav_gols} gols_adv={adv_gols} | odds_casa={odd_h} odds_fora={odd_a} | chutes_totais={stats.get('chutes_tot_h',0)}x{stats.get('chutes_tot_a',0)} | chutes_gol={stats.get('chutes_gol_h',0)}x{stats.get('chutes_gol_a',0)} | atq_perig={stats.get('ataques_perigosos_h',0)}x{stats.get('ataques_perigosos_a',0)} | escanteios={stats.get('escanteios_h','?')}x{stats.get('escanteios_a','?')} | red_fav={red_fav}")
+
         # Placar do favorito e adversário
         fav_gols = sh if fav_final == "h" else sa
         adv_gols = sa if fav_final == "h" else sh
@@ -2576,16 +2571,29 @@ def run():
             print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
 
         # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.0)
-        if p == 1 and 15 <= m <= 27 and sh == 0 and sa == 0 and fav_empatando and red_fav == 0 and appm_gols_ok and hist_ok:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_ht_{hoje}"
-            if key not in sent:
-                ob365 = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
-                obano = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
-                mid = send_telegram(msg_universal(h, a, m, liga, 3, "HT", "Over 0.5", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
-                if mid:
-                    sent.add(key); total_env += 1
-                    registrar_sinal(fid, "HT", h, a, mid)
+        if p == 1 and 15 <= m <= 27:
+            if not (sh == 0 and sa == 0):
+                print(f"[DIAG-HT-BARRA] {h} x {a} — placar não é 0x0 ({placar}), pulando")
+            elif not fav_empatando:
+                print(f"[DIAG-HT-BARRA] {h} x {a} — favorito não empatando (fav={fav_final}, gols_fav={fav_gols} adv={adv_gols}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_gols_ok:
+                print(f"[DIAG-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+            elif not hist_ok:
+                print(f"[DIAG-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
+            else:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_ht_{hoje}"
+                if key in sent:
+                    print(f"[DIAG-HT-DUP] {h} x {a} — já enviado hoje ({key}), pulando")
+                else:
+                    ob365 = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
+                    obano = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
+                    mid = send_telegram(msg_universal(h, a, m, liga, 3, "HT", "Over 0.5", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
+                    if mid:
+                        sent.add(key); total_env += 1
+                        registrar_sinal(fid, "HT", h, a, mid)
 
         # MERCADO 1B: OVER GOL LIMITE HT (15-27 min, 0x0, odd fav ≤ 1.80, prob 1.5 FT ≥ 60%, prob 0.5 HT ≥ 50%, APPM casa/fora ≥ 0.8)
         if p == 1 and 15 <= m <= 27 and sh == 0 and sa == 0 and red_fav == 0:
@@ -2608,8 +2616,29 @@ def run():
                 if not appm_ht_ok and _aph_val == 0 and _apa_val == 0:
                     appm_ht_ok = True
             
-            print(f"[LIMITE-HT] {h} x {a} | odd_fav={odd_fav_num} | prob_15ft={prob_15_ft}% | prob_05ht={prob_05_ht}% | appm_casa={appm_casa} appm_fora={appm_fora}")
-            if (odd_fav_num <= 1.80 and prob_15_ft >= 60 and prob_05_ht >= 50 and appm_ht_ok and appm_gols_ok and hist_ok):
+            print(f"[LIMITE-HT] {h} x {a} | odd_fav={odd_fav_num} | prob_15ft={prob_15_ft}% | prob_05ht={prob_05_ht}% | appm_casa={appm_casa} appm_fora={appm_fora} | appm_ht_ok={appm_ht_ok}")
+            
+            # Diagnóstico detalhado
+            limite_ht_ok = True
+            if odd_fav_num > 1.80:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — odd do favorito {odd_fav_num} > 1.80, pulando")
+                limite_ht_ok = False
+            elif prob_15_ft < 60:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — prob 1.5 FT {prob_15_ft}% < 60%, pulando")
+                limite_ht_ok = False
+            elif prob_05_ht < 50:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — prob 0.5 HT {prob_05_ht}% < 50%, pulando")
+                limite_ht_ok = False
+            elif not appm_ht_ok:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — APPM casa/fora insuficiente (casa={appm_casa} fora={appm_fora}, precisa ≥0.8), pulando")
+                limite_ht_ok = False
+            elif not appm_gols_ok:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — APPM gols insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                limite_ht_ok = False
+            elif not hist_ok:
+                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
+                limite_ht_ok = False
+            if limite_ht_ok:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_limiteht_{hoje}"
                 if key not in sent:
@@ -2621,22 +2650,44 @@ def run():
                         registrar_sinal(fid, "LIMITEHT", h, a, mid)
 
         # MERCADO 2: AMBAS MARCAM BTTS (55-75 min, fav perdendo por 1, sem vermelho do fav, média hist ≥ 2.0)
-        if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)) and fav_perdendo_1 and red_fav == 0 and appm_gols_ok and hist_ok:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_btts_{hoje}"
-            if key not in sent:
-                ob365 = j.get("odds_b365", {}).get("bts_yes") if j.get("odds_b365") else None
-                obano = j.get("odds_bano", {}).get("bts_yes") if j.get("odds_bano") else None
-                mid = send_telegram(msg_universal(h, a, m, liga, 4, "BTTS", "Ambas Marcam", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
-                if mid:
-                    sent.add(key); total_env += 1
-                    registrar_sinal(fid, "BTTS", h, a, mid)
+        if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)):
+            if not fav_perdendo_1:
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — favorito não perdendo por 1 (fav_gols={fav_gols} adv={adv_gols}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_gols_ok:
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+            elif not hist_ok:
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
+            else:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_btts_{hoje}"
+                if key in sent:
+                    print(f"[DIAG-BTTS-DUP] {h} x {a} — já enviado hoje, pulando")
+                else:
+                    ob365 = j.get("odds_b365", {}).get("bts_yes") if j.get("odds_b365") else None
+                    obano = j.get("odds_bano", {}).get("bts_yes") if j.get("odds_bano") else None
+                    mid = send_telegram(msg_universal(h, a, m, liga, 4, "BTTS", "Ambas Marcam", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
+                    if mid:
+                        sent.add(key); total_env += 1
+                        registrar_sinal(fid, "BTTS", h, a, mid)
 
         # MERCADO 3: OVER 1.5 FT (55-75 min, fav perdendo por 1, placar 1x0/0x1, sem vermelho do fav, média hist ≥ 2.0)
-        if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)) and fav_perdendo_1 and red_fav == 0 and appm_gols_ok and hist_ok:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_oft_{hoje}"
-            if key not in sent:
+        if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)):
+            if not fav_perdendo_1:
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — favorito não perdendo por 1 (fav_gols={fav_gols} adv={adv_gols}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_gols_ok:
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+            elif not hist_ok:
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
+            else:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_oft_{hoje}"
+                if key in sent:
+                    print(f"[DIAG-OFT-DUP] {h} x {a} — já enviado hoje, pulando")
+                else:
                 ob365 = j.get("odds_b365", {}).get("o+1.5") if j.get("odds_b365") else None
                 obano = j.get("odds_bano", {}).get("o+1.5") if j.get("odds_bano") else None
                 mid = send_telegram(msg_universal(h, a, m, liga, 4, "OFT", "Over 1.5", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
@@ -2646,22 +2697,33 @@ def run():
 
         # MERCADO 4: OVER GOL PARTIDA (55-75 min, placares 0x0/1x1/0x1/1x0, favorito empatando ou perdendo por 1, média hist ≥ 2.0)
         overgoal_valido = (fav_empatando or fav_perdendo_1)
-        if p == 2 and 55 <= m <= 75 and overgoal_valido and red_fav == 0 and appm_gols_ok and hist_ok:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_overgoal_{hoje}"
-            # Linha dinâmica: sempre acima do total de gols atual
-            total_gols = sh + sa
-            if total_gols == 0:
-                linha_over = "Over 0.5"
-            elif total_gols == 1:
-                linha_over = "Over 1.5"
-            elif total_gols == 2:
-                linha_over = "Over 2.5"
-            elif total_gols == 3:
-                linha_over = "Over 3.5"
+        if p == 2 and 55 <= m <= 75:
+            if not overgoal_valido:
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — favorito não empata nem perde por 1 (fav_empatando={fav_empatando} fav_perdendo_1={fav_perdendo_1}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_gols_ok:
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+            elif not hist_ok:
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
             else:
-                linha_over = f"Over {total_gols + 0.5:.1f}"
-            if key not in sent:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_overgoal_{hoje}"
+                # Linha dinâmica: sempre acima do total de gols atual
+                total_gols = sh + sa
+                if total_gols == 0:
+                    linha_over = "Over 0.5"
+                elif total_gols == 1:
+                    linha_over = "Over 1.5"
+                elif total_gols == 2:
+                    linha_over = "Over 2.5"
+                elif total_gols == 3:
+                    linha_over = "Over 3.5"
+                else:
+                    linha_over = f"Over {total_gols + 0.5:.1f}"
+                if key in sent:
+                    print(f"[DIAG-OVERGOAL-DUP] {h} x {a} — já enviado hoje ({key}), pulando")
+                else:
                 ob365 = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
                 obano = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
                 mid = send_telegram(msg_universal(h, a, m, liga, 4, "OVERGOAL", linha_over, placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
@@ -2670,15 +2732,25 @@ def run():
                     registrar_sinal(fid, "OVERGOAL", h, a, mid, extra_val=total_gols)
 
         # MERCADO 5: ESCANTEIO LIMITE HT (32-38 min, fav confirmado, empatando ou perdendo por 1, sem vermelho, APPM ≥ 1)
-        if p == 1 and 32 <= m <= 38 and (fav_empatando or fav_perdendo_1) and red_fav == 0 and appm_valido:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_cht_{hoje}"
-            cantos_h = stats.get("escanteios_h", -1) if stats else -1
-            cantos_a = stats.get("escanteios_a", -1) if stats else -1
-            cantos = (max(0, cantos_h) + max(0, cantos_a)) if (cantos_h >= 0 and cantos_a >= 0) else -1
-            if cantos < 0:
-                print(f"[SKIP-CORNER-HT] {h} x {a} — cantos={cantos} sem dados")
-            elif key not in sent:
+        if p == 1 and 32 <= m <= 38:
+            corner_cond = (fav_empatando or fav_perdendo_1)
+            if not corner_cond:
+                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — favorito não empata nem perde por 1 (fav_empatando={fav_empatando} fav_perdendo_1={fav_perdendo_1}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_valido:
+                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}, precisa ≥0.7/time ou ≥1.4 total), pulando")
+            else:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_cht_{hoje}"
+                cantos_h = stats.get("escanteios_h", -1) if stats else -1
+                cantos_a = stats.get("escanteios_a", -1) if stats else -1
+                cantos = (max(0, cantos_h) + max(0, cantos_a)) if (cantos_h >= 0 and cantos_a >= 0) else -1
+                if cantos < 0:
+                    print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — cantos={cantos} sem dados, pulando")
+                elif key in sent:
+                    print(f"[DIAG-CORNER-HT-DUP] {h} x {a} — já enviado hoje, pulando")
+                else:
                 ob365_e = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
                 obano_e = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
                 mid = send_telegram(msg_universal(h, a, m, liga, 5, "CORNER_HT", "", placar, cantos_atual=cantos, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365_e, odd_bano=obano_e), marca=key, home=h, away=a, odd_b365_val=ob365_e, odd_bano_val=obano_e)
@@ -2687,18 +2759,28 @@ def run():
                     registrar_sinal(fid, "CORNER_HT", h, a, mid, extra_val=cantos)
 
         # MERCADO 6: ESCANTEIO LIMITE FT (82-88 min, fav confirmado, empatando ou perdendo por 1, sem vermelho)
-        if p == 2 and 82 <= m <= 88 and (fav_empatando or fav_perdendo_1) and red_fav == 0 and appm_valido:
-            hoje = datetime.now(BRT).strftime('%Y%m%d')
-            key = f"{dedup_id}_cft_{hoje}"
-            cantos_h = stats.get("escanteios_h", -1) if stats else -1
-            cantos_a = stats.get("escanteios_a", -1) if stats else -1
-            if cantos_h >= 0 and cantos_a >= 0:
-                cantos = max(0, cantos_h) + max(0, cantos_a)
+        if p == 2 and 82 <= m <= 88:
+            corner_ft_cond = (fav_empatando or fav_perdendo_1)
+            if not corner_ft_cond:
+                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — favorito não empata nem perde por 1 (fav_empatando={fav_empatando} fav_perdendo_1={fav_perdendo_1}), pulando")
+            elif red_fav != 0:
+                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
+            elif not appm_valido:
+                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
             else:
-                cantos = -1
-            if cantos < 0:
-                print(f"[SKIP-CORNER-FT] {h} x {a} — cantos={cantos} sem dados")
-            elif key not in sent:
+                hoje = datetime.now(BRT).strftime('%Y%m%d')
+                key = f"{dedup_id}_cft_{hoje}"
+                cantos_h = stats.get("escanteios_h", -1) if stats else -1
+                cantos_a = stats.get("escanteios_a", -1) if stats else -1
+                if cantos_h >= 0 and cantos_a >= 0:
+                    cantos = max(0, cantos_h) + max(0, cantos_a)
+                else:
+                    cantos = -1
+                if cantos < 0:
+                    print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — cantos={cantos} sem dados, pulando")
+                elif key in sent:
+                    print(f"[DIAG-CORNER-FT-DUP] {h} x {a} — já enviado hoje, pulando")
+                else:
                 ob365_e = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
                 obano_e = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
                 mid = send_telegram(msg_universal(h, a, m, liga, 5, "CORNER_FT", "", placar, cantos_atual=cantos, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365_e, odd_bano=obano_e), marca=key, home=h, away=a, odd_b365_val=ob365_e, odd_bano_val=obano_e)
