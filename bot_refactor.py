@@ -1975,25 +1975,41 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         cantos_por_min = 0
         atq_perig_por_min = 0
 
-    # Pressão baseada exclusivamente no APPM da partida (total)
-    if atq_perig_por_min >= 1.8:
-        pressao = "Altíssima 🔥🔥"
-        alerta_appm = f"Partida com pressão ofensiva altíssima — {atq_perig_por_min} APPM"
-    elif atq_perig_por_min >= 1.0:
-        pressao = "Alta 🔥"
-        alerta_appm = f"Partida com pressão ofensiva alta — {atq_perig_por_min} APPM"
-    elif atq_perig_por_min >= 0.7:
-        pressao = "Moderada 💪"
-        alerta_appm = f"Partida com bom ritmo ofensivo — {atq_perig_por_min} APPM"
-    elif atq_perig_por_min >= 0.5:
-        pressao = "Média ✅"
-        alerta_appm = f"Partida com ritmo moderado — {atq_perig_por_min} APPM"
-    elif atq_perig_por_min >= 0.3:
-        pressao = "Baixa 👎"
-        alerta_appm = f"Partida com baixo volume ofensivo — {atq_perig_por_min} APPM"
+    # APPM individual por time
+    appm_h = round(atq_perig_h / minuto, 2) if minuto > 0 else 0
+    appm_a = round(atq_perig_a / minuto, 2) if minuto > 0 else 0
+
+    # Time dominante = o que tem mais ataques perigosos
+    if atq_perig_h >= atq_perig_a:
+        appm_dominante = appm_h
     else:
-        pressao = "Muito Baixa 👇"
-        alerta_appm = f"Partida muito parada — {atq_perig_por_min} APPM"
+        appm_dominante = appm_a
+
+    # Pressão baseada no APPM do time dominante
+    if appm_dominante >= 1.8:
+        pressao_val = appm_dominante
+        emoji_pressao = "🔥🔥"
+        alerta_appm = f"Partida com pressão ofensiva altíssima — {appm_dominante} APPM"
+    elif appm_dominante >= 1.0:
+        pressao_val = appm_dominante
+        emoji_pressao = "🔥"
+        alerta_appm = f"Partida com pressão ofensiva alta — {appm_dominante} APPM"
+    elif appm_dominante >= 0.7:
+        pressao_val = appm_dominante
+        emoji_pressao = "💪"
+        alerta_appm = f"Partida com bom ritmo ofensivo — {appm_dominante} APPM"
+    elif appm_dominante >= 0.5:
+        pressao_val = appm_dominante
+        emoji_pressao = "✅"
+        alerta_appm = f"Partida com ritmo moderado — {appm_dominante} APPM"
+    elif appm_dominante >= 0.3:
+        pressao_val = appm_dominante
+        emoji_pressao = "👎"
+        alerta_appm = f"Partida com baixo volume ofensivo — {appm_dominante} APPM"
+    else:
+        pressao_val = appm_dominante
+        emoji_pressao = "👇"
+        alerta_appm = f"Partida muito parada — {appm_dominante} APPM"
 
     # Alerta baseado no APPM da partida — ritmo ofensivo em tempo real
     alerta = alerta_appm
@@ -2025,7 +2041,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + sep + "\n"
         + "<b>💡 Análise Técnica da Partida:</b>\n"
         + "<b>🎯 Favorito:</b> <b>" + str(fav_nome) + "</b>\n"
-        + "<b>🔥 Pressão:</b> <b>" + pressao + "</b>\n"
+        + "<b>🔥 Pressão APPM:</b> <b>⚠️" + str(pressao_val) + "⚠️ " + emoji_pressao + "</b>\n"
         + "<b>⚠️ Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
