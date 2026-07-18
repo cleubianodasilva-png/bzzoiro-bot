@@ -1524,10 +1524,10 @@ def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
     if fid_raw and str(fid_raw).replace("skp_", "").isdigit():
         try:
             skp_odds = skp.get_odds_sokkerpro(fid_raw, home, away)
-            if skp_odds and len(skp_odds) == 3:
-                odd_h, odd_d, odd_a = skp_odds
-                if odd_h > 0 and odd_a > 0:
-                    return min(odd_h, odd_a)
+            if skp_odds and len(skp_odds) == 4:
+                fav, odd_h, odd_d, odd_a = skp_odds
+                if fav in ("h", "a") and odd_h > 0 and odd_a > 0:
+                    return odd_h if fav == "h" else odd_a
         except: pass
     
     if fid and league:
