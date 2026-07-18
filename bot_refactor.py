@@ -2005,95 +2005,61 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         atq_perig_h = stats.get("ataques_perigosos_h", 0)
         atq_perig_a = stats.get("ataques_perigosos_a", 0)
     else:
-        chutes_h = 0
-        chutes_a = 0
-        alvo_h = 0
-        alvo_a = 0
-        cant_h = 0
-        cant_a = 0
-        atq_perig_h = 0
-        atq_perig_a = 0
+        chutes_h, chutes_a, alvo_h, alvo_a, cant_h, cant_a, atq_perig_h, atq_perig_a = 0, 0, 0, 0, 0, 0, 0, 0
 
-    sep = "━━━━━━━━━━━━━━━━━━━━"
+    sep = "____________________________________"
     
-    # ─── ANÁLISE DINÂMICA (APPM - Ataques Perigosos Por Minuto do TIME DOMINANTE) ───
+    # ─── ANÁLISE DINÂMICA (APPM) ───
     atq_dominante = max(atq_perig_h, atq_perig_a)
-    if minuto > 0:
-        appm_dominante = round(atq_dominante / minuto, 2)
-    else:
-        appm_dominante = 0
+    appm_dominante = round(atq_dominante / minuto, 2) if minuto > 0 else 0
 
-    # Decide quem está pressionando mais
-    if atq_perig_h > atq_perig_a:
-        quem_pressiona = "do Mandante"
-    elif atq_perig_a > atq_perig_h:
-        quem_pressiona = "do Visitante"
-    else:
-        quem_pressiona = "de ambas equipes"
+    if atq_perig_h > atq_perig_a: quem_pressiona = "do Mandante"
+    elif atq_perig_a > atq_perig_h: quem_pressiona = "do Visitante"
+    else: quem_pressiona = "de ambas equipes"
 
-    # Alerta dinâmico baseado no APPM do time dominante
-    if appm_dominante >= 2.0:
-        alerta = "Partida Com Pressão Constante."
-    elif appm_dominante >= 1.5:
-        alerta = "Partida Pegando Fogo."
-    elif appm_dominante >= 1.0:
-        alerta = "Partida Com Ritmo Intenso."
-    elif appm_dominante >= 0.8:
-        alerta = "Partida com pressão " + quem_pressiona + "."
-    elif appm_dominante >= 0.7:
-        alerta = "Partida Com Ritmo Moderado."
-    elif appm_dominante >= 0.5:
-        alerta = "Partida Com Ritmo Médio."
-    elif appm_dominante >= 0.3:
-        alerta = "Partida Com Ritmo Fraco."
-    else:
-        alerta = "Partida Com Ritmo Muito Fraco 👇"
+    if appm_dominante >= 2.0: alerta = "Partida Com Pressão Constante."
+    elif appm_dominante >= 1.5: alerta = "Partida Pegando Fogo."
+    elif appm_dominante >= 1.05: alerta = "Pressão muito alta! Forte domínio " + quem_pressiona + "."
+    elif appm_dominante >= 1.0: alerta = "Partida Com Ritmo Intenso."
+    elif appm_dominante >= 0.8: alerta = "Partida com pressão " + quem_pressiona + "."
+    elif appm_dominante >= 0.7: alerta = "Partida Com Ritmo Moderado."
+    elif appm_dominante >= 0.6: alerta = "Pressão crescente " + quem_pressiona + " no 2º tempo." if minuto >= 45 else "Domínio consistente " + quem_pressiona + "."
+    elif appm_dominante >= 0.5: alerta = "Partida Com Ritmo Médio."
+    elif appm_dominante >= 0.3: alerta = "Jogo aberto! Ambas as equipes atacando com intensidade."
+    else: alerta = "Partida Com Ritmo Muito Fraco 👇"
 
-    # Emoji do minuto: ⏰️ pra mercados de gol (HT e OVERGOAL), ⏱ pros demais
-    if mercado in ("HT", "OVERGOAL"):
-        minuto_emoji = "⏰\ufe0f"
-    else:
-        minuto_emoji = "⏱"
+    if fav_final == "h": fav_nome = home
+    elif fav_final == "a": fav_nome = away
+    else: fav_nome = "—"
 
-    if fav_final == "h":
-        fav_nome = home
-    elif fav_final == "a":
-        fav_nome = away
-    else:
-        fav_nome = "—"
-
-    # ODD Recomendada: pega Bet365, senão Bzzoiro, senão nada
-    odd_rec = ""
-    if odd_b365:
-        odd_rec = f"{odd_b365:.2f}"
-    elif odd_bano:
-        odd_rec = f"{odd_bano:.2f}"
+    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "")
 
     msg = (
-        sep + "\n"
+        "<b>OPORTUNIDADE IDENTIFICADA</b> ⭐\n"
+        + sep + "\n\n"
         + "<b>" + title + "</b>\n"
-        + sep + "\n"
-        + "<b>⚽️ Placar:</b> <b>" + str(placar) + "</b>\n"
-        + "<b>🌍 Liga:</b> <b>" + str(liga) + "</b>\n"
+        + sep + "\n\n"
+        + "⚽ <b>Placar:</b> <b>" + str(placar) + "</b>\n"
+        + "🌍 <b>Liga:</b> <b>" + str(liga) + "</b>\n"
         + "📡 <b>" + str(home) + "</b> x <b>" + str(away) + "</b>\n"
-        + "<b>👀 ODDs:</b> <b>Casa " + (f"{odd_h:.2f}" if odd_h else "—") + " / Fora " + (f"{odd_a:.2f}" if odd_a else "—") + "</b>\n"
-        + "<b>" + minuto_emoji + " Minuto:</b> <b>" + str(minuto) + "'</b>\n"
-        + sep + "\n"
+        + "👀 <b>ODDs: Casa " + (f"{odd_h:.2f}" if odd_h else "—") + " / Fora " + (f"{odd_a:.2f}" if odd_a else "—") + "</b>\n"
+        + "⏱️ <b>Minuto: " + str(minuto) + "'</b>\n"
+        + sep + "\n\n"
         + "📊 <b>Estatísticas ao Vivo da Partida:</b>\n"
-        + "<b>🚀 Chutes Totais:</b> <b>" + str(chutes_h) + " | " + str(chutes_a) + "</b>\n"
-        + "<b>🎯 Chutes No Alvo:</b> <b>" + str(alvo_h) + " | " + str(alvo_a) + "</b>\n"
-        + "<b>⚔️ Ataques Perigosos:</b> <b>" + str(atq_perig_h) + " | " + str(atq_perig_a) + "</b>\n"
-        + "<b>🚩 Escanteios:</b> <b>" + str(cant_h) + " | " + str(cant_a) + "</b>\n"
-        + sep + "\n"
-        + "<b>💡 Análise Técnica da Partida:</b>\n"
-        + "<b>🎯 Favorito:</b> <b>" + str(fav_nome) + "</b>\n"
-        + "<b>🔥 Pressão APPM:</b> <b>⚠️" + str(appm_dominante) + "⚠️</b>\n"
-        + "<b>🚨 Alerta:</b> <b>" + alerta + "</b>\n"
-        + sep + "\n"
+        + "🚀 <b>Chutes Totais: " + str(chutes_h) + " | " + str(chutes_a) + "</b>\n"
+        + "🎯 <b>Chutes No Alvo: " + str(alvo_h) + " | " + str(alvo_a) + "</b>\n"
+        + "⚔️ <b>Ataques Perigosos: " + str(atq_perig_h) + " | " + str(atq_perig_a) + "</b>\n"
+        + "🚩 <b>Escanteios: " + str(cant_h) + " | " + str(cant_a) + "</b>\n"
+        + sep + "\n\n"
+        + "💡 <b>Análise Técnica da Partida:</b>\n"
+        + "🎯 <b>Favorito: " + str(fav_nome) + "</b>\n"
+        + "🔥 <b>Pressão APPM: ⚠️ " + str(appm_dominante) + " ⚠️</b>\n"
+        + "🚨 <b>Alerta: " + alerta + "</b>\n"
+        + sep + "\n\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
-        + (sep + "\n" + "💰 ODD Recomendada: <b>" + odd_rec + "+</b>\n" if odd_rec else "")
-        + sep + "\n"
-        + "<b>🔔Jogue com Responsabilidade🔔</b>\n"
+        + ("💰 ODD Recomendada: <b>" + odd_rec + "+</b>\n" if odd_rec else "")
+        + sep + "\n\n"
+        + "🔔 <b>Jogue com responsabilidade</b> 🔔"
     )
     keyboard = {
         "inline_keyboard": [
