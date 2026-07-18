@@ -714,6 +714,8 @@ def enviar_relatorio_diario():
     greens, reds = get_relatorio_hoje()
     msg = gerar_layout_relatorio(greens, reds, hoje)
     if send_telegram(msg):
+        sent_ctrl.add(hoje_key)
+        save_sent(sent_ctrl)
         print(f"[Relatório] Enviado ({hoje_key})")
 
 # ─── Performance por Mercado ────────────────────────────────────────────────────
@@ -1593,32 +1595,20 @@ def get_favorito_odds(home, away, fid=None, league=None):
         except Exception as e:
             print(f"[ODDS-ESPN] Erro: {e}")
 
-    # Fallback 2: Bzzoiro odds (quando fid for da Bzzoiro) — via /events/{id}/odds/comparison/ (best_odds)
+    # Fallback 2: Bzzoiro odds (quando fid for da Bzzoiro)
     if fid and str(fid).startswith("bzz_"):
         try:
             fid_raw = str(fid).replace("bzz_", "")
             headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(BZZOIRO_URL + f"/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=8)
+            r = requests.get(BZZOIRO_URL + f"/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=8)
             if r.status_code == 200:
-                odds_data = r.json().get("results", [])
-                odd_h = None
-                odd_a = None
-                # Pega menor odd HOME e menor odd AWAY entre todas as casas
-                for odd in odds_data:
-                    if odd.get("outcome") == "HOME":
-                        v = float(odd.get("decimal_odds", 0) or 0)
-                        if v > 1 and (odd_h is None or v < odd_h):
-                            odd_h = v
-                    elif odd.get("outcome") == "AWAY":
-                        v = float(odd.get("decimal_odds", 0) or 0)
-                        if v > 1 and (odd_a is None or v < odd_a):
-                            odd_a = v
-                if odd_h and odd_h > 1 and odd_a and odd_a > 1:
+                bz = r.json().get("odds", {})
+                odd_h = float(bz.get("home_win", 0) or 0)
+                odd_a = float(bz.get("away_win", 0) or 0)
+                if odd_h > 1 and odd_a > 1:
                     fav = "h" if odd_h <= odd_a else "a"
                     print(f"[ODDS-BZZ] {home} x {away} | Casa:{odd_h} Fora:{odd_a} -> Fav:{fav}")
                     return (fav, odd_h, odd_a)
-                else:
-                    print(f"[ODDS-BZZ] {home} x {away} — odds insuficientes (Casa:{odd_h} Fora:{odd_a}), sem fallback")
         except Exception as e:
             print(f"[ODDS-BZZ] Erro: {e}")
 
@@ -1680,19 +1670,18 @@ def get_favorito_odds(home, away, fid=None, league=None):
 # FILTRO DE JANELAS
 # ═══════════════════════════════════════════════════════════════════════════════
 def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
-    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro via /events/{id}/odds/comparison/, depois ESPN, depois Odds API."""
+    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro se tiver fid_raw, depois ESPN, depois Odds API."""
     if fid_raw:
         try:
             headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=6)
+            r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=6)
             if r.status_code == 200:
-                m1x2 = r.json().get("markets", {}).get("1x2", {})
-                best_home = float(m1x2.get("HOME", {}).get("best_odds", 99) or 99)
-                best_away = float(m1x2.get("AWAY", {}).get("best_odds", 99) or 99)
-                if 1 < best_home < 90 and 1 < best_away < 90:
-                    return min(best_home, best_away)
-        except Exception as e:
-            print(f"[ODDS-BZZ-NUM] Erro: {e}")
+                odds = r.json().get("odds", {})
+                oh = float(odds.get("home_win") or 99)
+                oa = float(odds.get("away_win") or 99)
+                if oh < 90 and oa < 90:
+                    return min(oh, oa)
+        except: pass
     
     if fid and league:
         try:
@@ -2464,11 +2453,14 @@ def run():
                 try:
                     sb_name = get_stats_bzzoiro_by_name(h, a)
                     if isinstance(sb_name, dict):
-                        if (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
+                        if "Club Friendlies" in liga:
+                            stats = sb_name
+                            print(f"[BZZ-NAME] Friendlies aceito: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')}")
+                        elif (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
                               sb_name.get("ataques_perigosos_h", 0) > 0 or sb_name.get("ataques_perigosos_a", 0) > 0 or
                               sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0):
                             stats = sb_name
-                            print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')} | atq_perig {sb_name.get('ataques_perigosos_h')}x{sb_name.get('ataques_perigosos_a')}")
+                            print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')}")
                 except: pass
 
         # Preenche defaults para campos que faltam
@@ -2482,17 +2474,22 @@ def run():
         if stats:
             print(f"[STATS-{BOT_SOURCE.upper()}] {h} x {a} | chutes: {stats.get('chutes_tot_h',0)}/{stats.get('chutes_tot_a',0)} | cantos: {stats.get('escanteios_h',-1)}/{stats.get('escanteios_a',-1)} | atq_perig: {stats.get('ataques_perigosos_h',0)}/{stats.get('ataques_perigosos_a',0)}")
 
-        # Verifica se tem dados reais — TODAS as fontes (incluindo Bzzoiro)
-        # Stats reais = chutes OU ataques perigosos (escanteio sozinho não vale)
-        tem_stats = stats and (
-            stats.get("chutes_tot_h", 0) > 0 or
-            stats.get("chutes_tot_a", 0) > 0 or
-            stats.get("ataques_perigosos_h", 0) > 0 or
-            stats.get("ataques_perigosos_a", 0) > 0
-        )
-        if not tem_stats:
-            print(f"[SKIP] {h} x {a} — sem stats reais (chutes ou ataques perigosos) em nenhuma API, pulando jogo")
-            continue
+        # Verifica se tem dados reais — APENAS para apifootball/ESPN
+# Bzzoiro é LIVRE, sem filtro de stats
+        if BOT_SOURCE != "bzzoiro":
+            tem_stats = stats and (
+                stats.get("chutes_tot_h", 0) > 0 or
+                stats.get("chutes_tot_a", 0) > 0 or
+                stats.get("escanteios_h", -1) > 0 or
+                stats.get("escanteios_a", -1) > 0 or
+                stats.get("ataques_perigosos_h", 0) > 0 or
+                stats.get("ataques_perigosos_a", 0) > 0
+            )
+            if not tem_stats:
+                print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
+                continue
+        else:
+            print(f"[BZZ-LIVRE] {h} x {a} — modo livre, sem filtro de stats")
 
         # Favorito: odds da própria fonte (cada bot só usa sua API)
         odd_h = j.get("odd_h")
@@ -2532,18 +2529,15 @@ def run():
         elif BOT_SOURCE == "bzzoiro":
             try:
                 headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-                r = requests.get(f"https://sports.bzzoiro.com/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=8)
-                m1x2 = r.json().get("markets", {}).get("1x2", {})
-                odd_h = float(m1x2.get("HOME", {}).get("best_odds", 0) or 0)
-                odd_a = float(m1x2.get("AWAY", {}).get("best_odds", 0) or 0)
+                r = requests.get(f"https://sports.bzzoiro.com/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=8)
+                bz = r.json().get("odds", {})
+                odd_h = float(bz.get("home_win", 0) or 0)
+                odd_a = float(bz.get("away_win", 0) or 0)
                 if odd_h > 1 and odd_a > 1:
                     fav_final = "h" if odd_h <= odd_a else "a"
                     fav_por_odds = True
-                    print(f"[ODDS-BZZ] {h} x {a} — odds reais: Casa:{odd_h} Fora:{odd_a} -> Fav:{fav_final}")
-                else:
-                    print(f"[ODDS-BZZ] {h} x {a} — odds insuficientes: Casa:{odd_h} Fora:{odd_a}, usando fallback")
-            except Exception as e:
-                print(f"[ODDS-BZZ] Erro no loop: {e}")
+                    print(f"[ODDS-BZZ] {h} x {a} — odd Casa:{odd_h:.2f} Fora:{odd_a:.2f}")
+            except: pass
 
         # Sem odds = usa stats (chutes) como fallback para definir favorito
         if not fav_por_odds:
@@ -2557,11 +2551,10 @@ def run():
                 fav_final = "h"
                 print(f"[FAV-HOME] {h} x {a} — sem odds e sem stats, assumindo mandante como favorito")
 
-        # Bzzoiro: mesmo sem odds, segue com favorito por chutes ou mandante
-        if BOT_SOURCE != "bzzoiro":
-            if not (odd_h and odd_h > 1 and odd_a and odd_a > 1):
-                print(f"[SKIP-SEM-ODDS] {h} x {a} — nenhuma odd válida (Casa:{odd_h} Fora:{odd_a}), pulando sinal")
-                continue
+        # Se NENHUMA fonte retornou odds válidas, pula o jogo
+        if not (odd_h and odd_h > 1 and odd_a and odd_a > 1):
+            print(f"[SKIP-SEM-ODDS] {h} x {a} — nenhuma odd válida (Casa:{odd_h} Fora:{odd_a}), pulando sinal")
+            continue
 
         red_fav = stats.get(f"red_cards_{fav_final}", 0) if stats else 0
 
@@ -2613,19 +2606,14 @@ def run():
 
         # HISTÓRICO — Média de gols por partida (jogo todo) ≥ 2.0
         # Req. para: Over Gol HT, Over Gol FT e BTTS
-        # Bzzoiro: sem filtro (modo livre)
-        if BOT_SOURCE == "bzzoiro":
-            hist_ok = True
-            media_hist = 0.0
-        else:
-            home_id = j.get("home_id", "")
-            away_id = j.get("away_id", "")
-            media_hist = 0.0
-            if home_id and away_id:
-                media_hist = get_media_gols_historica(home_id, away_id)
-            hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
-            if not hist_ok:
-                print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
+        home_id = j.get("home_id", "")
+        away_id = j.get("away_id", "")
+        media_hist = 0.0
+        if home_id and away_id:
+            media_hist = get_media_gols_historica(home_id, away_id)
+        hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
+        if not hist_ok:
+            print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
 
         # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.0)
         if p == 1 and 15 <= m <= 27:
