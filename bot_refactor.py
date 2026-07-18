@@ -517,7 +517,9 @@ def send_telegram(msg_data, reply_to=None, marca=None, home="", away="", odd_b36
 # ARQUIVOS LOCAIS
 # ═══════════════════════════════════════════════════════════════════════════════
 GITHUB_TOKEN = os.environ.get("GH_PAT", "")
-GITHUB_REPO  = os.environ.get("GITHUB_REPOSITORY", "cleubianodasilva-png/boot-ia-inteligente-bot")
+GITHUB_REPO  = os.environ.get("GITHUB_REPOSITORY", "")
+if not GITHUB_REPO:
+    GITHUB_REPO = "cleubianodasilva-png/boot-ia-inteligente-bot"
 SENT_API_PATH        = "sent_live_signals.json"
 RESULTADO_API_PATH   = "resultados.json"
 PERFORMANCE_API_PATH = "performance.json"
@@ -2472,18 +2474,22 @@ def run():
         if stats:
             print(f"[STATS-{BOT_SOURCE.upper()}] {h} x {a} | chutes: {stats.get('chutes_tot_h',0)}/{stats.get('chutes_tot_a',0)} | cantos: {stats.get('escanteios_h',-1)}/{stats.get('escanteios_a',-1)} | atq_perig: {stats.get('ataques_perigosos_h',0)}/{stats.get('ataques_perigosos_a',0)}")
 
-        # Verifica se tem dados reais — sem stats E sem odds, pula o jogo
-        tem_stats = stats and (
-            stats.get("chutes_tot_h", 0) > 0 or
-            stats.get("chutes_tot_a", 0) > 0 or
-            stats.get("escanteios_h", -1) > 0 or
-            stats.get("escanteios_a", -1) > 0 or
-            stats.get("ataques_perigosos_h", 0) > 0 or
-            stats.get("ataques_perigosos_a", 0) > 0
-        )
-        if not tem_stats:
-            print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
-            continue
+        # Verifica se tem dados reais — APENAS para apifootball/ESPN
+# Bzzoiro é LIVRE, sem filtro de stats
+        if BOT_SOURCE != "bzzoiro":
+            tem_stats = stats and (
+                stats.get("chutes_tot_h", 0) > 0 or
+                stats.get("chutes_tot_a", 0) > 0 or
+                stats.get("escanteios_h", -1) > 0 or
+                stats.get("escanteios_a", -1) > 0 or
+                stats.get("ataques_perigosos_h", 0) > 0 or
+                stats.get("ataques_perigosos_a", 0) > 0
+            )
+            if not tem_stats:
+                print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
+                continue
+        else:
+            print(f"[BZZ-LIVRE] {h} x {a} — modo livre, sem filtro de stats")
 
         # Favorito: odds da própria fonte (cada bot só usa sua API)
         odd_h = j.get("odd_h")
@@ -2587,7 +2593,7 @@ def run():
         #   - OVER GOLS: casa ≥ 0.8 OU fora ≥ 0.8 OU total ≥ 1.5
         #   - ESCANTEIOS: casa ≥ 0.7 OU fora ≥ 0.7 OU total ≥ 1.4
         # boot-ia-inteligente-bot (Grupo ZAPIA): livre
-        if BOT_SOURCE == "espn" or "maquina-de-greens" in BOT_SOURCE:
+        if BOT_SOURCE == "espn" or "maquina-de-greens" in _repo_atual:
             appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4  # escanteios
             appm_gols_ok  = _appm_h >= 0.8 or _appm_a >= 0.8 or _appm_total >= 1.5  # over gols
             if not appm_valido:
