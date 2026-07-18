@@ -126,7 +126,6 @@ def obter_nome_liga(game, fonte):
     return liga
 # ═══════════════════════════════════════════════════════════════════════════════
 # BOT MÁQUINA DE GREENS / ZAPIA - VERSÃO ELITE 100% AUTOMÁTICA
-# FONTES: ESPN PÚBLICA + BZZOIRO (TOKEN ATIVO) + APIFOOTBALL (V3 ATIVA)
 # ═══════════════════════════════════════════════════════════════════════════════
 import os, json, requests, time
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
@@ -454,7 +453,6 @@ APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-# # # BZZOIRO_TOKEN removido removido
 SOKKERPRO_URL = "https://m2.sokkerpro.com/livescores"
 
 
@@ -465,7 +463,6 @@ APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-# # # BZZOIRO_TOKEN removido removido
 SOKKERPRO_URL = "https://m2.sokkerpro.com/livescores"
 
 
@@ -476,7 +473,6 @@ APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-# # # BZZOIRO_TOKEN removido removido
 SOKKERPRO_URL = "https://m2.sokkerpro.com/livescores"
 
 # ═══════════════+++
@@ -1105,7 +1101,6 @@ def get_stats_apifootball_v3(match_id):
 def get_stats_sokkerpro(fid_raw, home, away):
     try:
         headers = {}  # SokkerPro
-#         r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/stats/", headers=headers, timeout=10)
         data = r.json()
         raw_stats = data.get("stats", {})
         stats = {}
@@ -1366,7 +1361,6 @@ def get_odds_sokkerpro(fid_raw):
 def get_stats_sokkerpro(fid_raw, home, away):
     try:
         headers = {}  # SokkerPro
-#         r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/stats/", headers=headers, timeout=10)
         data = r.json()
         raw_stats = data.get("stats", {})
         
@@ -1716,7 +1710,6 @@ def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
     if fid_raw:
         try:
             headers = {}  # SokkerPro
-#             r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=6)
             if r.status_code == 200:
                 odds = r.json().get("odds", {})
                 oh = float(odds.get("home_win") or 99)
