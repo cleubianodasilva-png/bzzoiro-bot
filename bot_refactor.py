@@ -2715,6 +2715,7 @@ def run():
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_oft_{hoje}"
+                mid = None
                 if key in sent:
                     print(f"[DIAG-OFT-DUP] {h} x {a} — já enviado hoje, pulando")
                 else:
@@ -2751,6 +2752,7 @@ def run():
                     linha_over = "Over 3.5"
                 else:
                     linha_over = f"Over {total_gols + 0.5:.1f}"
+                mid = None
                 if key in sent:
                     print(f"[DIAG-OVERGOAL-DUP] {h} x {a} — já enviado hoje ({key}), pulando")
                 else:
@@ -2776,6 +2778,7 @@ def run():
                 cantos_h = stats.get("escanteios_h", -1) if stats else -1
                 cantos_a = stats.get("escanteios_a", -1) if stats else -1
                 cantos = (max(0, cantos_h) + max(0, cantos_a)) if (cantos_h >= 0 and cantos_a >= 0) else -1
+                mid = None
                 if cantos < 0:
                     print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — cantos={cantos} sem dados, pulando")
                 elif key in sent:
@@ -2806,6 +2809,7 @@ def run():
                     cantos = max(0, cantos_h) + max(0, cantos_a)
                 else:
                     cantos = -1
+                mid = None
                 if cantos < 0:
                     print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — cantos={cantos} sem dados, pulando")
                 elif key in sent:
