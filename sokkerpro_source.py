@@ -6,6 +6,18 @@ Sem chave, sem token, sem limite de requisições.
 import requests, json, unicodedata, re
 
 SOKKERPRO_URL = "https://m2.sokkerpro.com/livescores"
+# ─── Cache de resposta da API (evita múltiplas requisições no mesmo ciclo) ───
+_CACHED_DATA = None
+
+def _get_data():
+    """Retorna dados da API SokkerPro com cache interno."""
+    global _CACHED_DATA
+    if _CACHED_DATA is None:
+        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        _CACHED_DATA = r.json()
+    return _CACHED_DATA
+
+
 
 def _norm(s):
     return unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode().lower().strip()
@@ -33,8 +45,7 @@ def get_jogos_sokkerpro(fids_existentes):
     Retorna mesma estrutura que get_jogos_bzzoiro().
     """
     try:
-        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        data = r.json()
+        data = _get_data()
         jogos = []
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
@@ -118,8 +129,7 @@ def get_stats_sokkerpro(fid_raw, home, away):
     a gente busca de novo pra ter dados frescos.
     """
     try:
-        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        data = r.json()
+        data = _get_data()
         # Busca o fixture pelo ID
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
@@ -203,8 +213,7 @@ def get_stats_sokkerpro_by_name(home, away):
     try:
         h_norm = _norm(home)
         a_norm = _norm(away)
-        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        data = r.json()
+        data = _get_data()
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
                 h_nome = _norm(fix.get('localTeamName', ''))
@@ -225,8 +234,7 @@ def get_odds_sokkerpro(fid_raw, home, away):
     Prioridade: BET365 live > XBET pré > médias históricas.
     """
     try:
-        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        data = r.json()
+        data = _get_data()
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
                 if str(fix.get('fixtureId', '')) != fid_raw:
@@ -286,8 +294,7 @@ def identificar_favorito_medias(fix):
 def get_favorito_medias(fid_raw):
     """Busca fixture por ID e retorna favorito via médias históricas."""
     try:
-        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        data = r.json()
+        data = _get_data()
         for cat in data['data']['sortedCategorizedFixtures']:
             for fix in cat['fixtures']:
                 if str(fix.get('fixtureId', '')) == fid_raw:
