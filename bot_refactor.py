@@ -2023,6 +2023,8 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
         + "<b>💰 ODD Recomendada:</b> <b>1.70+</b>\n"
         + sep + "\n"
+        + '<b><a href="https://www.bet365.bet.br/#/AX/">🟣BET365🟣</a></b> | <b><a href="https://paripesa.com/en/live/football/">🔵PARIPESA🔵</a></b>\n'
+        + sep + "\n"
         + "<b>🔔Jogue com responsabilidade🔔</b>"
     )
 
