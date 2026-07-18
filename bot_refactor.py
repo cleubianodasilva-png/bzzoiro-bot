@@ -2032,21 +2032,21 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     # THRESHOLDS CLEUBIANO — APPM PURO (ÚNICO SISTEMA DE ALERTA)
     # ════════════════════════════════════════════════════════════════
     if appm_val >= 2.0:
-        alerta = "Partida Com Pressão Constante"
+        alerta = "Partida Com Pressão Constante."
     elif appm_val >= 1.5:
-        alerta = "Partida Pegando Fogo"
+        alerta = "Partida Pegando Fogo."
     elif appm_val >= 1.0:
-        alerta = "Partida Com Ritmo Intenso"
+        alerta = "Partida Com Ritmo Intenso."
     elif appm_val >= 0.8:
-        alerta = f"Partida com pressão {quem}"
+        alerta = f"Partida com pressão {quem}."
     elif appm_val >= 0.7:
-        alerta = "Partida Com Ritmo Moderado"
+        alerta = "Partida Com Ritmo Moderado."
     elif appm_val >= 0.5:
-        alerta = "Partida Com Ritmo Médio"
+        alerta = "Partida Com Ritmo Médio."
     elif appm_val >= 0.3:
-        alerta = "Partida Com Ritmo Fraco"
+        alerta = "Partida Com Ritmo Fraco."
     else:
-        alerta = "Partida Com Ritmo Muito Baixo"
+        alerta = "Partida Com Ritmo Muito Baixo."
 
     # APPM para exibição no layout
     appm = appm_val
