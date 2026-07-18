@@ -1969,18 +1969,25 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         appm_dominante = 0
 
-    # Alerta baseado APENAS no APPM do time dominante
-    if appm_dominante >= 1.8:
-        alerta = "Partida com pressão ofensiva altíssima 🔥🔥"
-    elif appm_dominante >= 1.0:
-        alerta = "Partida com pressão ofensiva alta 🔥"
-    elif appm_dominante >= 0.7:
-        alerta = "Partida com pressão ofensiva moderada 💪"
-    elif appm_dominante >= 0.5:
-        alerta = "Partida com ritmo ofensivo médio ✅"
-    elif appm_dominante >= 0.3:
-        alerta = "Partida com ritmo ofensivo baixo 👎"
+    # Alerta dinâmico baseado EXCLUSIVAMENTE no APPM do time dominante
+    # Decide quem está pressionando mais
+    if atq_perig_h > atq_perig_a:
+        quem_pressiona = "do Mandante"
+    elif atq_perig_a > atq_perig_h:
+        quem_pressiona = "do Visitante"
     else:
+        quem_pressiona = "de ambas equipes"
+
+    if appm_dominante >= 2.0:
+        alerta = "Partida pegando fogo! 🔥🔥"
+    elif appm_dominante >= 1.2:
+        alerta = "Partida com ritmo intenso 🔥"
+    elif appm_dominante >= 0.7:
+        alerta = f"Partida com bastante pressão {quem_pressiona} 💪"
+    elif appm_dominante >= 0.4:
+        alerta = "Partida com ritmo moderado ✅"
+    else:
+        alerta = "Partida com ritmo baixo 👎"
         alerta = "Partida com ritmo ofensivo muito baixo 👇"
 
     if fav_final == "h":
