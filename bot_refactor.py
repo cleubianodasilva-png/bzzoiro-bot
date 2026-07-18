@@ -1981,24 +1981,22 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         quem_pressiona = "de ambas equipes"
 
     # Alerta dinâmico baseado no APPM do time dominante
-    if minuto >= 45:
-        periodo_suffix = " no 2º tempo"
-    else:
-        periodo_suffix = ""
-
-    if appm_dominante >= 1.0:
-        alerta = "Pressão muito alta! Forte domínio " + quem_pressiona + "."
+    if appm_dominante >= 2.0:
+        alerta = "Partida Com Pressão Constante."
+    elif appm_dominante >= 1.5:
+        alerta = "Partida Pegando Fogo."
+    elif appm_dominante >= 1.0:
+        alerta = "Partida Com Ritmo Intenso."
+    elif appm_dominante >= 0.8:
+        alerta = "Partida com pressão " + quem_pressiona + "."
     elif appm_dominante >= 0.7:
-        alerta = "Partida com bastante pressão " + quem_pressiona + "."
+        alerta = "Partida Com Ritmo Moderado."
     elif appm_dominante >= 0.5:
-        if minuto >= 45:
-            alerta = "Pressão crescente " + quem_pressiona + " no 2º tempo."
-        else:
-            alerta = "Partida com domínio consistente " + quem_pressiona + "."
+        alerta = "Partida Com Ritmo Médio."
     elif appm_dominante >= 0.3:
-        alerta = "Jogo aberto! Ambas as equipes atacando com intensidade."
+        alerta = "Partida Com Ritmo Fraco."
     else:
-        alerta = "Partida com ritmo ofensivo muito baixo 👇"
+        alerta = "Partida Com Ritmo Muito Fraco 👇"
 
     # Emoji do minuto: ⏰️ pra mercados de gol (HT e OVERGOAL), ⏱ pros demais
     if mercado in ("HT", "OVERGOAL"):
