@@ -2021,14 +2021,22 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>🚨 Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
-        + "<b>💰 ODD Recomendada:</b> <b>1.70+</b>\n"
-        + sep + "\n"
-        + '<b><a href="https://www.bet365.bet.br/#/AX/">🟣BET365🟣</a></b> | <b><a href="https://paripesa.com/en/live/football/">🔵PARIPESA🔵</a></b>\n'
-        + sep + "\n"
-        + "<b>🔔Jogue com responsabilidade🔔</b>"
-    )
+    # Inline Keyboard (os botões reais abaixo da mensagem)
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+            ]
+        ]
+    }
+    
+    return msg, keyboard
 
-def checar_resultado(sinal):
+def send_telegram(msg_data, marca="Zapia", home="H", away="A", odd_b365_val=None, odd_bano_val=None):
+    text, keyboard = msg_data
+    # ... logic to send text and reply_markup=keyboard ...
+
     try:
         eid     = str(sinal.get("fixture_id"))
         mercado = sinal.get("mercado")
