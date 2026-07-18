@@ -519,7 +519,7 @@ def send_telegram(msg_data, reply_to=None, marca=None, home="", away="", odd_b36
 GITHUB_TOKEN = os.environ.get("GH_PAT", "")
 GITHUB_REPO  = os.environ.get("GITHUB_REPOSITORY", "")
 if not GITHUB_REPO:
-    GITHUB_REPO = "cleubianodasilva-png/boot-ia-inteligente-bot"
+    GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "cleubianodasilva-png/boot-ia-inteligente-bot")
 SENT_API_PATH        = "sent_live_signals.json"
 RESULTADO_API_PATH   = "resultados.json"
 PERFORMANCE_API_PATH = "performance.json"
