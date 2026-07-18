@@ -193,8 +193,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else: alerta = "Partida Com Ritmo Lento."
 
     msg = (
-        "<b>OPORTUNIDADE DETECTADA:</b>\n"
-        + sep + "\n"
+        sep + "\n"
         + "<b>" + title + "</b>\n"
         + sep + "\n"
         + "<b>⚽️ Placar: " + str(placar) + "</b>\n"
@@ -216,7 +215,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + "<b>📌 Entrada: " + str(entrada) + "</b>\n"
         + "<b>💰 ODD Recomendada: 1.70+</b>\n"
         + sep + "\n"
-        + "🔔<b>Jogue com Responsabilidade</b>🔔"
+        + "<b>🔔Jogue com Responsabilidade🔔</b>"
     )
     return msg
 
