@@ -2261,15 +2261,27 @@ def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=No
             if agora_ts - msg_ts > 600: # Ignora comandos com mais de 10 minutos
                 continue
             pass  # responde em qualquer chat
-            if text == "/relatoriomensal" and not relatorio_respondido:
+            if ("/relatoriomensal" in text or text.startswith("/relatoriomensal@")) and not relatorio_respondido:
                 msg = enviar_relatorio_mensal()
                 requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
                               json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
                 relatorio_respondido = True
-            if text == "/relatoriodiario" and not relatorio_respondido:
+            if ("/relatoriodiario" in text or text.startswith("/relatoriodiario@")) and not relatorio_respondido:
                 enviar_relatorio_diario()
                 relatorio_respondido = True
-            elif text == "/radar" and not radar_respondido:
+            elif ("/mercados" in text or text.startswith("/mercados@")) and not relatorio_respondido:
+                try:
+                    msg = enviar_relatorio_performance()
+                    if msg:
+                        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+                                      json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
+                    else:
+                        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+                                      json={"chat_id": chat_orig, "text": "Ainda sem dados de performance registrados.", "parse_mode": "HTML"})
+                except Exception as e:
+                    print(f"[PERFORMANCE] Erro: {e}")
+                relatorio_respondido = True
+            elif ("/radar" in text or text.startswith("/radar@")) and not radar_respondido:
                 jogos_live = jogos_live or []
                 jogos_na_janela = jogos_na_janela or []
                 # Monta lista de jogos na janela
