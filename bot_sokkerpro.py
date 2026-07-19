@@ -2261,27 +2261,15 @@ def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=No
             if agora_ts - msg_ts > 600: # Ignora comandos com mais de 10 minutos
                 continue
             pass  # responde em qualquer chat
-            if ("/relatoriomensal" in text or text.startswith("/relatoriomensal@")) and not relatorio_respondido:
+            if text == "/relatoriomensal" and not relatorio_respondido:
                 msg = enviar_relatorio_mensal()
                 requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
                               json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
                 relatorio_respondido = True
-            if ("/relatoriodiario" in text or text.startswith("/relatoriodiario@")) and not relatorio_respondido:
+            if text == "/relatoriodiario" and not relatorio_respondido:
                 enviar_relatorio_diario()
                 relatorio_respondido = True
-            elif ("/mercados" in text or text.startswith("/mercados@")) and not relatorio_respondido:
-                try:
-                    msg = enviar_relatorio_performance()
-                    if msg:
-                        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
-                                      json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
-                    else:
-                        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
-                                      json={"chat_id": chat_orig, "text": "Ainda sem dados de performance registrados.", "parse_mode": "HTML"})
-                except Exception as e:
-                    print(f"[PERFORMANCE] Erro: {e}")
-                relatorio_respondido = True
-            elif ("/radar" in text or text.startswith("/radar@")) and not radar_respondido:
+            elif text == "/radar" and not radar_respondido:
                 jogos_live = jogos_live or []
                 jogos_na_janela = jogos_na_janela or []
                 # Monta lista de jogos na janela
@@ -2649,9 +2637,13 @@ def run():
         home_id = j.get("home_id", "")
         away_id = j.get("away_id", "")
         media_hist = 0.0
-        if home_id and away_id:
-            media_hist = get_media_gols_historica(home_id, away_id)
-        hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
+        # SokkerPro: não tem histórico compatível com apifootball, libera tudo
+        if BOT_SOURCE == "sokkerpro":
+            hist_ok = True
+        else:
+            if home_id and away_id:
+                media_hist = get_media_gols_historica(home_id, away_id)
+            hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
         if not hist_ok:
             print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
 
