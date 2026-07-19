@@ -115,13 +115,14 @@ def obter_nome_liga(game, fonte):
     if fonte == "apifootball":
         liga = game.get('league', {}).get('name', "Liga Não Identificada")
     elif fonte == "sokkerpro":
-        liga = game.get('league_name', "Liga Não Identificada")
+        # SokkerPro retorna camelCase: leagueName
+        liga = game.get('leagueName') or game.get('league_name', "Liga Não Identificada")
     elif fonte == "espn":
         liga = game.get('league', "Liga Não Identificada")
     
     # Se ainda estiver vazio, busca em campos genéricos que as APIs costumam usar
     if liga == "Liga Não Identificada":
-        liga = game.get('league_name') or game.get('competition_name') or game.get('league') or "Liga Não Identificada"
+        liga = game.get('leagueName') or game.get('league_name') or game.get('competition_name') or game.get('league') or "Liga Não Identificada"
         
     return liga
 # ═══════════════════════════════════════════════════════════════════════════════
