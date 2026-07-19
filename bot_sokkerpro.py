@@ -1283,16 +1283,16 @@ def get_stats_sokkerpro(fid_raw, home="", away=""):
             for fix in cat['fixtures']:
                 if str(fix.get('fixtureId', '')) == str(fid_raw):
                     return {
-                        "chutes_tot_h": _get_int(fix.get('home_shots_total', 0)),
-                        "chutes_tot_a": _get_int(fix.get('away_shots_total', 0)),
-                        "chutes_gol_h": _get_int(fix.get('home_shots_on_target', 0)),
-                        "chutes_gol_a": _get_int(fix.get('away_shots_on_target', 0)),
-                        "escanteios_h": _get_int(fix.get('home_corner_kicks', 0)),
-                        "escanteios_a": _get_int(fix.get('away_corner_kicks', 0)),
-                        "ataques_perigosos_h": _get_int(fix.get('home_dangerous_attacks', 0)),
-                        "ataques_perigosos_a": _get_int(fix.get('away_dangerous_attacks', 0)),
-                        "red_cards_h": _get_int(fix.get('home_red_cards', 0)),
-                        "red_cards_a": _get_int(fix.get('away_red_cards', 0))
+                        "chutes_tot_h": _get_int(fix.get('localShotsTotal', 0)),
+                        "chutes_tot_a": _get_int(fix.get('visitorShotsTotal', 0)),
+                        "chutes_gol_h": _get_int(fix.get('localShotsOnGoal', 0)),
+                        "chutes_gol_a": _get_int(fix.get('visitorShotsOnGoal', 0)),
+                        "escanteios_h": _get_int(fix.get('localCorners', 0)),
+                        "escanteios_a": _get_int(fix.get('visitorCorners', 0)),
+                        "ataques_perigosos_h": _get_int(fix.get('localAttacksDangerousAttacks', 0)),
+                        "ataques_perigosos_a": _get_int(fix.get('visitorAttacksDangerousAttacks', 0)),
+                        "red_cards_h": _get_int(fix.get('localRedCards', 0)),
+                        "red_cards_a": _get_int(fix.get('visitorRedCards', 0))
                     }
     except: pass
     return {}
@@ -1357,58 +1357,6 @@ def get_odds_sokkerpro(fid_raw):
         elif "chutes_gol_h" in stats:
             stats["chutes_tot_h"] = max(stats.get("chutes_tot_h", 0), stats["chutes_gol_h"])
             stats["chutes_tot_a"] = max(stats.get("chutes_tot_a", 0), stats["chutes_gol_a"])
-        return stats
-    except: return {}
-
-def get_stats_sokkerpro(fid_raw, home, away):
-    try:
-        headers = {}  # SokkerPro
-        data = r.json()
-        raw_stats = data.get("stats", {})
-        
-        # SokkerPro costuma aninhar as estatísticas reais dentro de subchaves se o provider for detalhado
-        # Mas vamos primeiro tentar o mapeamento direto que estava no código
-        
-        stats = {}
-        any_nonzero = False
-        
-        # Mapeamento SokkerPro para nosso padrão (h/a)
-        # SokkerPro keys: total_shots, shots_on_target, corner_kicks, dangerous_attack, ball_possession
-        
-        for side, key in [("home", "h"), ("away", "a")]:
-            side_data = raw_stats.get(side, {})
-            
-            # Se side_data for apenas {"xg":...}, tenta buscar em níveis mais profundos ou fallback
-            # Alguns eventos no SokkerPro retornam stats vazias se não houver cobertura premium
-            
-            val_tot = int(side_data.get("total_shots", 0) or 0)
-            stats[f"chutes_tot_{key}"] = val_tot
-            if val_tot > 0: any_nonzero = True
-            
-            val_gol = int(side_data.get("shots_on_target", 0) or 0)
-            stats[f"chutes_gol_{key}"] = val_gol
-            if val_gol > 0: any_nonzero = True
-            
-            val_corn = int(side_data.get("corner_kicks", 0) or 0)
-            stats[f"escanteios_{key}"] = val_corn
-            if val_corn > 0: any_nonzero = True
-            
-            val_atq = int(side_data.get("dangerous_attack", 0) or 0)
-            stats[f"ataques_perigosos_{key}"] = val_atq
-            if val_atq > 0: any_nonzero = True
-            
-            val_pos = int(side_data.get("ball_possession", 0) or 0)
-            stats[f"posse_{key}"] = val_pos
-            if val_pos > 0: any_nonzero = True
-            
-            stats[f"red_cards_{key}"] = int(side_data.get("red_cards", 0) or 0)
-            stats[f"yellow_cards_{key}"] = int(side_data.get("yellow_cards", 0) or 0)
-
-        # Fallback: Se stats vierem vazias da SokkerPro, tenta a ESPN pelo nome dos times
-        if not any_nonzero:
-            espn_stats = get_stats_espn_by_name(home, away)
-            if espn_stats: return espn_stats
-            
         return stats
     except: return {}
 
