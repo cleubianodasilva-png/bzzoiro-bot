@@ -536,7 +536,7 @@ def gerar_layout_performance():
         t = info["total"]
         pct = info["pct"]
         linhas.append(
-            f"{nome}\n"
+            f"<b>{nome}</b>\n"
             f"   ⏳ Total: {t} | 🟢 {g} | 🔴 {r}\n"
             f"   🎯 Acerto: <b>{pct:.1f}%</b>"
         )
