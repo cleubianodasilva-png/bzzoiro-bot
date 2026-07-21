@@ -549,7 +549,7 @@ def gerar_layout_performance():
         f"{sep}\n"
         f"📊<b>RELATÓRIO DE PERFORMANCE</b>📊\n"
         f"{sep}\n"
-        f"{f'\n{sep}\n'.join(blocos)}\n"
+        f"{f'{chr(10)}{sep}{chr(10)}'.join(blocos)}{chr(10)}"
         f"{sep}\n"
         f"📌 <b>GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%</b>\n"
         f"{sep}\n"
