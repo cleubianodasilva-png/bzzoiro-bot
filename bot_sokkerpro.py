@@ -528,17 +528,17 @@ def gerar_layout_performance():
     """Gera layout do relatório de performance por mercado."""
     dados = get_performance()
     sep = "━" * 20
-    linhas = []
+    blocos = []
     for cod, info in dados.items():
         nome = info["nome"]
         g = info["green"]
         r = info["red"]
         t = info["total"]
         pct = info["pct"]
-        linhas.append(
-            f"<b>{nome}</b>\n"
+        blocos.append(
+            f"{nome}\n"
             f"   ⏳ Total: {t} | 🟢 {g} | 🔴 {r}\n"
-            f"   🎯 Acerto: <b>{pct:.1f}%</b>"
+            f"   🎯 Acerto: {pct:.1f}%"
         )
     total_g = sum(d["green"] for d in dados.values())
     total_r = sum(d["red"] for d in dados.values())
@@ -547,15 +547,14 @@ def gerar_layout_performance():
 
     msg = (
         f"{sep}\n"
-        f"📊<b>RELATÓRIO DE PERFORMANCE</b>📊\n"
-        f"{sep}\n\n"
-        f"{chr(10).join(linhas)}\n"
+        f"📊RELATÓRIO DE PERFORMANCE📊\n"
         f"{sep}\n"
-        f"📌 <b>GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%</b>\n"
+        f"{f'\n{sep}\n'.join(blocos)}\n"
         f"{sep}\n"
-        f"<b>Regras de Validação:</b>\n"
-        f"✅ Mínimo 1000 entradas + ≥70% acerto = Mercado <b>VÁLIDO</b>\n"
-        f"⏳ Ainda não atingiu os critérios\n"
+        f"📌 GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%\n"
+        f"{sep}\n"
+        f"Regras de Validação:\n"
+        f"✅ Mínimo 1000 entradas + ≥70% acerto = Mercado VÁLIDO\n"
         f"{sep}"
     )
     return msg
