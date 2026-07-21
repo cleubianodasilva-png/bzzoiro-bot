@@ -1628,7 +1628,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
         f"<b>🎯 Chutes No Alvo: {alvo_h} | {alvo_a}</b>\n"
         f"<b>⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}</b>\n"
         f"<b>🚩 Escanteios: {cant_h} | {cant_a}</b>\n"
-        f"<b>⚽️ Posse: {posse_h}% | {posse_a}%</b>\n"
+        f"<b>👑 Posse: {posse_h}% | {posse_a}%</b>\n"
         f"{sep}\n"
         f"<b>💡 Análise Técnica da Partida:</b>\n"
         f"<b>🎯 Favorito: {fav_nome}</b>\n"
