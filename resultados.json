@@ -2146,5 +2146,11 @@
     "resultado": "red",
     "mercado": "OVERGOAL",
     "timestamp": "2026-07-21T19:15:24.787737-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "green",
+    "mercado": "CORNER_FT",
+    "timestamp": "2026-07-21T19:15:28.452288-03:00"
   }
 ]
