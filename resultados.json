@@ -664,5 +664,11 @@
     "resultado": "green",
     "mercado": "HT",
     "timestamp": "2026-07-21T08:40:27.615104-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "red",
+    "mercado": "HT",
+    "timestamp": "2026-07-21T08:40:30.951940-03:00"
   }
 ]
