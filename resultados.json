@@ -2170,5 +2170,11 @@
     "resultado": "red",
     "mercado": "HT",
     "timestamp": "2026-07-21T19:50:35.992861-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "green",
+    "mercado": "CORNER_HT",
+    "timestamp": "2026-07-21T19:50:39.287651-03:00"
   }
 ]
