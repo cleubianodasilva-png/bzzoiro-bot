@@ -1990,5 +1990,11 @@
     "resultado": "green",
     "mercado": "OFT",
     "timestamp": "2026-07-21T17:40:45.965634-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "green",
+    "mercado": "OVERGOAL",
+    "timestamp": "2026-07-21T17:40:49.569689-03:00"
   }
 ]
