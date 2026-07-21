@@ -1688,6 +1688,14 @@ def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=No
             if text == "/relatoriodiario" and not relatorio_respondido:
                 enviar_relatorio_diario()
                 relatorio_respondido = True
+            elif text == "/mercados":
+                try:
+                    msg = enviar_relatorio_performance()
+                    if not msg:
+                        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+                                      json={"chat_id": chat_orig, "text": "Ainda sem dados de performance registrados.", "parse_mode": "HTML"})
+                except Exception as e:
+                    print(f"[PERFORMANCE] Erro: {e}")
             elif text == "/radar" and not radar_respondido:
                 jogos_live = jogos_live or []
                 jogos_na_janela = jogos_na_janela or []
@@ -2379,3 +2387,4 @@ def processar_comandos_pendentes(token, chat_id, jogos_live=None, jogos_na_janel
         print(f"[CMD] Erro processar comandos: {e}")
 if __name__ == "__main__":
     run()
+
