@@ -1726,5 +1726,11 @@
     "resultado": "red",
     "mercado": "BTTS",
     "timestamp": "2026-07-21T16:55:43.819823-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "red",
+    "mercado": "OFT",
+    "timestamp": "2026-07-21T16:55:47.552403-03:00"
   }
 ]
