@@ -1306,5 +1306,11 @@
     "resultado": "red",
     "mercado": "HT",
     "timestamp": "2026-07-21T16:15:56.859996-03:00"
+  },
+  {
+    "data": "2026-07-21",
+    "resultado": "red",
+    "mercado": "LIMITEHT",
+    "timestamp": "2026-07-21T16:16:00.300150-03:00"
   }
 ]
