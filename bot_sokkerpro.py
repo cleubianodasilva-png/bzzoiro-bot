@@ -456,7 +456,7 @@ MAPA_MERCADO = {
     "OFT": "⚽🔥OVER 1.5 GOLS FT🔥⚽️",
     "OVERGOAL": "⚽🔥OVER GOL PARTIDA🔥⚽️",
     "CORNER_HT": "🚩🔥ESCANTEIO LIMITE HT🔥🚩",
-    "CORNER_HT2": "🚩🔥ESCANTEIO LIMITE HT🔥🚩",
+    "CORNER_HT2": "⛳️🔥ESCANTEIO LIMITE HT🔥⛳️",
     "CORNER_FT": "🚩🔥ESCANTEIO LIMITE FT🔥🚩"
 }
 
@@ -1586,7 +1586,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
 
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         if mercado == "CORNER_HT2":
-            title = "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩"
+            title = "⛳️🔥ESCANTEIO LIMITE HT🔥⛳️"
         else:
             nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
             title = f"🚩🔥{nome_m}🔥🚩"
