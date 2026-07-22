@@ -2123,21 +2123,11 @@ def run():
         _appm_total = round(_apt_val / m, 2) if m > 0 else 0
         _appm_h = round(_aph_val / m, 2) if m > 0 else 0
         _appm_a = round(_apa_val / m, 2) if m > 0 else 0
-        # APPM seletiva por repositório
-        # maquina-de-greens-bot (Grupo GITHUB): APPM ativo
-        #   - OVER GOLS: casa ≥ 0.8 OU fora ≥ 0.8 OU total ≥ 1.5
-        #   - ESCANTEIOS: casa ≥ 0.7 OU fora ≥ 0.7 OU total ≥ 1.4
-        # boot-ia-inteligente-bot (Grupo ZAPIA): livre
-        if False:
-            appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4  # escanteios
-            appm_gols_ok  = _appm_h >= 0.8 or _appm_a >= 0.8 or _appm_total >= 1.5  # over gols
-            if not appm_valido:
-                print(f"[APPM-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.7/time ou 1.4 total)")
-            if not appm_gols_ok:
-                print(f"[APPM-GOLS-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.8/time ou 1.5 total)")
-        else:
-            appm_valido   = True
-            appm_gols_ok  = True
+        # APPM universal — mínimo 0.70 em todos os mercados (anti-jogo morno)
+        appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4
+        appm_gols_ok  = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4
+        if not appm_valido:
+            print(f"[APPM-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.7/time ou 1.4 total)")
 
         # HISTÓRICO — Média de gols por partida (jogo todo) ≥ 2.0
         # Req. para: Over Gol HT, Over Gol FT e BTTS
@@ -2184,10 +2174,10 @@ def run():
             fid_raw = j.get("fid_raw")
             odd_fav_num = get_odd_favorito_num(h, a, fid=fid, league=j.get("liga_slug", j.get("liga", "")), fid_raw=fid_raw)
             
-            # APPM: ataques perigosos por minuto (casa OU fora ≥ 0.8)
+            # APPM: ataques perigosos por minuto (casa OU fora ≥ 0.7)
             appm_casa = _appm_h
             appm_fora = _appm_a
-            appm_ht_ok = appm_casa >= 0.8 or appm_fora >= 0.8
+            appm_ht_ok = appm_casa >= 0.7 or appm_fora >= 0.7
             
             # Cálculo de probabilidades via chutes (se tiver)
             chutes_tot_total = (stats.get("chutes_tot_h", 0) + stats.get("chutes_tot_a", 0)) if stats else 0
