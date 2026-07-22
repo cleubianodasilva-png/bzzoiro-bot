@@ -5,9 +5,9 @@
     "total": 15
   },
   "LIMITEHT": {
-    "green": 0,
+    "green": 1,
     "red": 2,
-    "total": 2
+    "total": 3
   },
   "BTTS": {
     "green": 1,
