@@ -6,8 +6,8 @@
   },
   "LIMITEHT": {
     "green": 0,
-    "red": 0,
-    "total": 0
+    "red": 1,
+    "total": 1
   },
   "BTTS": {
     "green": 0,
