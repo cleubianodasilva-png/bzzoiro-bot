@@ -1,37 +1,42 @@
 {
   "HT": {
-    "green": 96,
-    "red": 54,
-    "total": 150
-  },
-  "CORNER_HT": {
-    "green": 126,
-    "red": 8,
-    "total": 134
-  },
-  "OVERGOAL": {
-    "green": 65,
-    "red": 30,
-    "total": 95
-  },
-  "CORNER_FT": {
-    "green": 50,
-    "red": 25,
-    "total": 75
-  },
-  "BTTS": {
-    "green": 12,
-    "red": 7,
-    "total": 19
-  },
-  "OFT": {
-    "green": 15,
-    "red": 4,
-    "total": 19
+    "green": 0,
+    "red": 0,
+    "total": 0
   },
   "LIMITEHT": {
-    "green": 10,
-    "red": 4,
-    "total": 14
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "BTTS": {
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "OFT": {
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "OVERGOAL": {
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "CORNER_HT": {
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "CORNER_HT2": {
+    "green": 0,
+    "red": 0,
+    "total": 0
+  },
+  "CORNER_FT": {
+    "green": 0,
+    "red": 0,
+    "total": 0
   }
 }
