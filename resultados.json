@@ -2548,5 +2548,11 @@
     "resultado": "green",
     "mercado": "HT",
     "timestamp": "2026-07-22T08:25:26.595018-03:00"
+  },
+  {
+    "data": "2026-07-22",
+    "resultado": "green",
+    "mercado": "OVERGOAL",
+    "timestamp": "2026-07-22T08:30:32.359729-03:00"
   }
 ]
