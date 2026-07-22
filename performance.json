@@ -10,9 +10,9 @@
     "total": 127
   },
   "OVERGOAL": {
-    "green": 64,
+    "green": 65,
     "red": 30,
-    "total": 94
+    "total": 95
   },
   "CORNER_FT": {
     "green": 50,
