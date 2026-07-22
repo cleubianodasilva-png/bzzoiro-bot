@@ -460,5 +460,11 @@
     "resultado": "red",
     "mercado": "HT",
     "timestamp": "2026-07-22T16:55:35.973249-03:00"
+  },
+  {
+    "data": "2026-07-22",
+    "resultado": "green",
+    "mercado": "BTTS",
+    "timestamp": "2026-07-22T16:55:39.487814-03:00"
   }
 ]
