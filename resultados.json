@@ -2614,5 +2614,11 @@
     "resultado": "green",
     "mercado": "OVERGOAL",
     "timestamp": "2026-07-22T09:30:31.197514-03:00"
+  },
+  {
+    "data": "2026-07-22",
+    "resultado": "green",
+    "mercado": "CORNER_FT",
+    "timestamp": "2026-07-22T09:30:33.739542-03:00"
   }
 ]
