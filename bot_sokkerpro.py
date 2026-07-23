@@ -2299,11 +2299,6 @@ def run():
         processar_comandos_pendentes(TG_TOKEN, CHAT_ID, jogos_live, jogos_na_janela)
     except Exception as e:
         print(f"[CMD] Erro chamando comandos: {e}")
-    # Processa comandos pendentes com dados reais
-    try:
-        processar_comandos_pendentes(TG_TOKEN, CHAT_ID, jogos_live, jogos_na_janela)
-    except Exception as e:
-        print(f"[CMD] Erro chamando comandos: {e}")
     # ═══════════════════════════════════════════════════════════════════════════
     # AUTO-DISPATCH: /relatoriodiario + /mercados24h às 23:55
     # ═══════════════════════════════════════════════════════════════════════════
@@ -2322,7 +2317,8 @@ def run():
 
 
 def processar_comandos_pendentes(token, chat_id, jogos_live=None, jogos_na_janela=None):
-    """Processa comandos /relatoriodiario e /radar com checkpoint de update_id."""
+    """Processa apenas /radar com dados de jogos ao vivo.
+    /mercados, /relatoriodiario e /relatoriomensal são processados por check_status_command()."""
     if jogos_live is None: jogos_live = []
     if jogos_na_janela is None: jogos_na_janela = []
     max_id = 0
@@ -2367,30 +2363,6 @@ def processar_comandos_pendentes(token, chat_id, jogos_live=None, jogos_na_janel
                     requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                                   json={"chat_id": chat_orig, "text": msg_radar, "parse_mode": "HTML"})
                     print(f"[CMD] Radar respondido com {len(jogos_live)} jogos live, {len(jogos_na_janela)} na janela")
-                elif "/relatoriomensal" in text:
-                    try:
-                        msg = enviar_relatorio_mensal()
-                        requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                                      json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
-                    except Exception as e:
-                        print(f"[REL-MENSAL] Erro: {e}")
-                elif "/relatoriodiario" in text:
-                    try: enviar_relatorio_diario()
-                    except: pass
-                elif "/mercados" in text:
-                    try:
-                        if "/mercados24h" in text:
-                            msg = gerar_layout_mercados24h()
-                        else:
-                            msg = enviar_relatorio_performance()
-                        if msg:
-                            requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                                          json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
-                        else:
-                            requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                                          json={"chat_id": chat_orig, "text": "Ainda sem dados de performance registrados.", "parse_mode": "HTML"})
-                    except Exception as e:
-                        print(f"[PERFORMANCE] Erro: {e}")
         if max_id > 0:
             try:
                 off = max_id
