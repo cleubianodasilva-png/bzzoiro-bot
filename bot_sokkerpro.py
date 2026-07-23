@@ -1751,7 +1751,7 @@ _HIST_CACHE = {}
 def get_media_gols_historica_skp(home, away, stats):
     """Retorna a média de gols por partida usando os campos medias da SokkerPro.
     As médias da SokkerPro já consideram no mínimo 10 jogos.
-    Bloqueia mercados de gol se média < 2.5."""
+    Bloqueia mercados de gol se média < 2.2. Sem dados = bloqueia (retorna -1)."""
     chave = f"{home}_{away}"
     if chave in _HIST_CACHE:
         return _HIST_CACHE[chave]
@@ -1764,7 +1764,7 @@ def get_media_gols_historica_skp(home, away, stats):
         media_h = stats.get("medias_home_goal", 0)
         media_a = stats.get("medias_away_goal", 0)
 
-        # Se não tem dados de média, retorna -1 (não bloqueia — info insuficiente)
+        # Sem dados de média → retorna -1 (bloqueia na prática: -1 < 2.2 = False)
         if media_h <= 0 and media_a <= 0:
             _HIST_CACHE[chave] = -1.0
             return -1.0
