@@ -34,5 +34,11 @@
     "resultado": "red",
     "mercado": "OFT",
     "timestamp": "2026-07-23T12:00:40.966346-03:00"
+  },
+  {
+    "data": "2026-07-23",
+    "resultado": "red",
+    "mercado": "OVERGOAL",
+    "timestamp": "2026-07-23T12:00:44.270283-03:00"
   }
 ]
