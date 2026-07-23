@@ -801,22 +801,6 @@ def get_stats_apifootball_v3(match_id):
         return stats
     except: return {}
 
-def get_stats_sokkerpro(fid_raw, home, away):
-    try:
-        headers = {}  # SokkerPro
-        data = r.json()
-        raw_stats = data.get("stats", {})
-        stats = {}
-        for side, key in [("home", "h"), ("away", "a")]:
-            side_data = raw_stats.get(side, {})
-            stats[f"chutes_tot_{key}"] = int(side_data.get("total_shots", 0) or 0)
-            stats[f"chutes_gol_{key}"] = int(side_data.get("shots_on_target", 0) or 0)
-            stats[f"escanteios_{key}"] = int(side_data.get("corner_kicks", 0) or 0)
-            cards = side_data.get("cards", {})
-            if isinstance(cards, dict):
-                stats[f"red_cards_{key}"] = int(cards.get("red", 0) or 0)
-        return stats
-    except: return {}
 
 
 
@@ -2100,7 +2084,6 @@ def run():
         # Fonte: própria API SokkerPro (medias_home_goal + medias_away_goal)
         media_hist = get_media_gols_historica_skp(h, a, stats)
         hist_ok = media_hist < 0 or media_hist >= 2.5  # -1 = sem dados históricos (não bloqueia)
-        hist_ok_corner = media_hist < 0 or media_hist >= 2.0  # Escanteios: limite mais baixo (2.0)
         if not hist_ok:
             print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.5, pulando mercados de gol")
 
@@ -2222,8 +2205,6 @@ def run():
                 print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_valido:
                 print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
-            elif not hist_ok_corner:
-                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cht_{hoje}"
@@ -2252,8 +2233,6 @@ def run():
                 print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_valido:
                 print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
-            elif not hist_ok_corner:
-                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cft_{hoje}"
