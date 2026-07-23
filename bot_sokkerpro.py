@@ -1998,11 +1998,11 @@ def run():
         # Req. para: Escanteios HT/FT → ≥ 2.0
         # Fonte: própria API SokkerPro (medias_home_goal + medias_away_goal)
         media_hist = get_media_gols_historica_skp(h, a, stats)
-        hist_ok = media_hist < 0 or media_hist >= 2.5  # -1 = sem dados históricos (não bloqueia)
+        hist_ok = media_hist >= 2.2  # mínimo 2.2 gols de média; -1 = sem dados, bloqueia
         if not hist_ok:
-            print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.5, pulando mercados de gol")
+            print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.2, pulando mercados de gol")
 
-        # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.5)
+        # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.2)
         if p == 1 and 15 <= m <= 27:
             if not (sh == 0 and sa == 0):
                 print(f"[DIAG-HT-BARRA] {h} x {a} — placar não é 0x0 ({placar}), pulando")
@@ -2013,7 +2013,7 @@ def run():
             elif not appm_gols_ok:
                 print(f"[DIAG-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
-                print(f"[DIAG-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
+                print(f"[DIAG-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_ht_{hoje}"
@@ -2027,7 +2027,7 @@ def run():
                         sent.add(key); total_env += 1
                         registrar_sinal(fid, "HT", h, a, mid)
 
-        # MERCADO 2: AMBAS MARCAM BTTS (55-75 min, fav perdendo por 1, sem vermelho do fav, média hist ≥ 2.5)
+        # MERCADO 2: AMBAS MARCAM BTTS (55-75 min, fav perdendo por 1, sem vermelho do fav, média hist ≥ 2.2)
         if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)):
             if not fav_perdendo_1:
                 print(f"[DIAG-BTTS-BARRA] {h} x {a} — favorito não perdendo por 1 (fav_gols={fav_gols} adv={adv_gols}), pulando")
@@ -2036,7 +2036,7 @@ def run():
             elif not appm_gols_ok:
                 print(f"[DIAG-BTTS-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
-                print(f"[DIAG-BTTS-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_btts_{hoje}"
@@ -2050,7 +2050,7 @@ def run():
                         sent.add(key); total_env += 1
                         registrar_sinal(fid, "BTTS", h, a, mid)
 
-        # MERCADO 3: OVER 1.5 FT (55-75 min, fav perdendo por 1, placar 1x0/0x1, sem vermelho do fav, média hist ≥ 2.5)
+        # MERCADO 3: OVER 1.5 FT (55-75 min, fav perdendo por 1, placar 1x0/0x1, sem vermelho do fav, média hist ≥ 2.2)
         if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)):
             if not fav_perdendo_1:
                 print(f"[DIAG-OFT-BARRA] {h} x {a} — favorito não perdendo por 1 (fav_gols={fav_gols} adv={adv_gols}), pulando")
@@ -2059,7 +2059,7 @@ def run():
             elif not appm_gols_ok:
                 print(f"[DIAG-OFT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
-                print(f"[DIAG-OFT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_oft_{hoje}"
@@ -2074,7 +2074,7 @@ def run():
                     sent.add(key); total_env += 1
                     registrar_sinal(fid, "OFT", h, a, mid)
 
-        # MERCADO 4: OVER GOL PARTIDA (55-75 min, placares 0x0/1x1/0x1/1x0, favorito empatando ou perdendo por 1, média hist ≥ 2.5)
+        # MERCADO 4: OVER GOL PARTIDA (55-75 min, placares 0x0/1x1/0x1/1x0, favorito empatando ou perdendo por 1, média hist ≥ 2.2)
         overgoal_valido = (fav_empatando or fav_perdendo_1)
         if p == 2 and 55 <= m <= 75:
             if not overgoal_valido:
@@ -2084,7 +2084,7 @@ def run():
             elif not appm_gols_ok:
                 print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
-                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_overgoal_{hoje}"
