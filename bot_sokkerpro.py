@@ -815,18 +815,14 @@ def get_jogos_apifootball_v3(fids_existentes):
         return []
 
 
-_CACHED_DATA = None
-
 def _get_data():
-    global _CACHED_DATA
-    if _CACHED_DATA is None:
-        try:
-            r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-            _CACHED_DATA = r.json()
-        except Exception as e:
-            print(f"[SKP] Erro ao buscar dados: {e}")
-            return None
-    return _CACHED_DATA
+    """Sempre busca dados frescos do SokkerPro (sem cache)."""
+    try:
+        r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        return r.json()
+    except Exception as e:
+        print(f"[SKP] Erro ao buscar dados: {e}")
+        return None
 
 def _get_float(val, default=0.0):
     if not val or str(val).strip() in ('', 'None'): return default
@@ -1781,6 +1777,26 @@ def run():
 
     check_status_command(total_jogos_live=len(jogos_live), jogos_live=jogos_live, jogos_na_janela=jogos_na_janela)
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # VALIDAÇÃO DE SINAIS PENDENTES — roda SEMPRE, mesmo sem jogos na janela
+    # ═══════════════════════════════════════════════════════════════════════════
+    try:
+        sinais_p = _load_sinais_github()
+        rest = []
+        for s in sinais_p:
+            res = checar_resultado(s)
+            if res:
+                emoji = "🟢GREEN CONFIRMADO🟢" if res == "green" else "🔴RED CONFIRMADO🔴"
+                send_telegram(emoji, reply_to=s.get("message_id"))
+                salvar_resultado(res, mercado=s.get("mercado"))
+                registrar_performance(s.get("mercado"), res)
+            else:
+                rest.append(s)
+        _save_sinais_github(rest)
+        print(f"[SINAIS] {len(sinais_p) - len(rest)} resultados confirmados, {len(rest)} ainda pendentes")
+    except Exception as e:
+        print(f"[SINAIS] Erro validação: {e}")
+
     if not jogos_na_janela:
         print("[OK] Nenhum jogo na janela — aguardando próximo ciclo")
         save_sent(sent)
@@ -2155,24 +2171,6 @@ def run():
                     registrar_sinal(fid, "CORNER_FT", h, a, mid, extra_val=cantos)
 
     save_sent(sent)
-
-    # Validação de resultados pendentes — lê e salva via GitHub
-    try:
-        sinais_p = _load_sinais_github()
-        rest = []
-        for s in sinais_p:
-            res = checar_resultado(s)
-            if res:
-                emoji = "🟢GREEN CONFIRMADO🟢" if res == "green" else "🔴RED CONFIRMADO🔴"
-                send_telegram(emoji, reply_to=s.get("message_id"))
-                salvar_resultado(res, mercado=s.get("mercado"))
-                registrar_performance(s.get("mercado"), res)
-            else:
-                rest.append(s)
-        _save_sinais_github(rest)
-        print(f"[SINAIS] {len(sinais_p) - len(rest)} resultados confirmados, {len(rest)} ainda pendentes")
-    except Exception as e:
-        print(f"[SINAIS] Erro validação: {e}")
 
     # AUTO-DISPATCH: /relatoriodiario + /mercados24h às 23:55
     # ═══════════════════════════════════════════════════════════════════════════
