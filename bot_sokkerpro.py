@@ -251,8 +251,13 @@ def _git_commit_push(msg):
     try:
         subprocess.run(["git", "config", "user.name", "bot-sokkerpro"], capture_output=True, timeout=10)
         subprocess.run(["git", "config", "user.email", "bot@sokkerpro.com"], capture_output=True, timeout=10)
-        subprocess.run(["git", "add", SENT_API_PATH, "last_update.json", "sinais_pendentes.json", "resultados.json", "performance.json"], capture_output=True, timeout=10)
-        subprocess.run(["git", "commit", "-m", msg, "--author", "bot <bot@bot>"], capture_output=True, timeout=10)
+        subprocess.run(["git", "add", "-A", "--", "*.json"], capture_output=True, timeout=10)
+        # Só commita se realmente houver mudanças
+        r = subprocess.run(["git", "diff", "--cached", "--quiet"], capture_output=True, timeout=10)
+        if r.returncode == 0:
+            print(f"[GIT] Nada a commitar, skip")
+            return
+        subprocess.run(["git", "commit", "-m", msg], capture_output=True, timeout=10)
         subprocess.run(["git", "push", f"https://{GITHUB_TOKEN}@github.com/{GITHUB_REPO}.git"], capture_output=True, timeout=30)
         print(f"[GIT] Commit+push OK: {msg}")
     except Exception as e:
