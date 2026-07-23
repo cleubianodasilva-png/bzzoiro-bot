@@ -835,6 +835,7 @@ def _get_int(val, default=0):
     except: return default
 
 def get_jogos_sokkerpro(fids_existentes):
+    """Busca jogos, stats E odds em UMA unica chamada HTTP."""
     data = _get_data()
     if not data: return []
     jogos = []
@@ -852,8 +853,29 @@ def get_jogos_sokkerpro(fids_existentes):
                 elif status == 'HT': period = 1
                 elif status == 'NS': period = 0
                 else: period = 0
-                # Só incluir se tiver dados basicos
+                # So incluir se tiver dados basicos
                 if status == 'NS' and not minuto: continue
+                # Stats inline (extraidos da mesma fixture - sem nova requisicao)
+                stats = {
+                    "chutes_tot_h": _get_int(fix.get('localShotsTotal', 0)),
+                    "chutes_tot_a": _get_int(fix.get('visitorShotsTotal', 0)),
+                    "chutes_gol_h": _get_int(fix.get('localShotsOnGoal', 0)),
+                    "chutes_gol_a": _get_int(fix.get('visitorShotsOnGoal', 0)),
+                    "escanteios_h": _get_int(fix.get('localCorners', 0)),
+                    "escanteios_a": _get_int(fix.get('visitorCorners', 0)),
+                    "ataques_perigosos_h": _get_int(fix.get('localAttacksDangerousAttacks', 0)),
+                    "ataques_perigosos_a": _get_int(fix.get('visitorAttacksDangerousAttacks', 0)),
+                    "red_cards_h": _get_int(fix.get('localRedCards', 0)),
+                    "red_cards_a": _get_int(fix.get('visitorRedCards', 0)),
+                    "medias_home_goal": _get_float(fix.get('medias_home_goal', 0)),
+                    "medias_away_goal": _get_float(fix.get('medias_away_goal', 0))
+                }
+                # Odds inline
+                oh = _get_float(fix.get('XBET_VENCEDOR_HOME'))
+                oa = _get_float(fix.get('XBET_VENCEDOR_AWAY'))
+                if not (oh > 1 and oa > 1):
+                    oh = _get_float(fix.get('BET365_VENCEDOR_1_LIVE'))
+                    oa = _get_float(fix.get('BET365_VENCEDOR_2_LIVE'))
                 jogos.append({
                     "fid": fid,
                     "home": fix.get('localTeamName', 'Home'),
@@ -864,11 +886,13 @@ def get_jogos_sokkerpro(fids_existentes):
                     "sa": _get_int(fix.get('scoresVisitorTeam', 0)),
                     "liga": fix.get('leagueName', 'Liga'),
                     "pais": fix.get('countryName', ''),
-                    "source": "sokkerpro"
+                    "source": "sokkerpro",
+                    "_stats": stats,
+                    "_odd_h": oh if oh and oh > 1 else None,
+                    "_odd_a": oa if oa and oa > 1 else None
                 })
     except: pass
     return jogos
-
 
 def get_stats_sokkerpro(fid_raw, home="", away=""):
     data = _get_data()
