@@ -20,9 +20,9 @@
     "total": 7
   },
   "CORNER_HT": {
-    "green": 1,
+    "green": 2,
     "red": 2,
-    "total": 3
+    "total": 4
   },
   "CORNER_FT": {
     "green": 0,
