@@ -280,5 +280,11 @@
     "resultado": "green",
     "mercado": "HT",
     "timestamp": "2026-07-23T16:20:25.095966-03:00"
+  },
+  {
+    "data": "2026-07-23",
+    "resultado": "red",
+    "mercado": "CORNER_HT",
+    "timestamp": "2026-07-23T16:25:20.567203-03:00"
   }
 ]
