@@ -1,8 +1,8 @@
 {
   "HT": {
-    "green": 3,
-    "red": 3,
-    "total": 6
+    "green": 0,
+    "red": 0,
+    "total": 0
   },
   "BTTS": {
     "green": 0,
@@ -15,9 +15,9 @@
     "total": 0
   },
   "OVERGOAL": {
-    "green": 3,
+    "green": 0,
     "red": 0,
-    "total": 3
+    "total": 0
   },
   "CORNER_HT": {
     "green": 0,
