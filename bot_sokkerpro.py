@@ -451,7 +451,6 @@ def enviar_relatorio_diario():
 # ─── Performance por Mercado ────────────────────────────────────────────────────
 MAPA_MERCADO = {
     "HT": "⚽️🔥OVER GOL INTERVALO🔥⚽️",
-    "LIMITEHT": "⚽️🔥OVER GOL LIMITE HT🔥⚽️",
     "BTTS": "⚽🔥AMBAS MARCAM🔥⚽️",
     "OFT": "⚽🔥OVER 1.5 GOLS FT🔥⚽️",
     "OVERGOAL": "⚽🔥OVER GOL PARTIDA🔥⚽️",
@@ -1394,17 +1393,6 @@ def gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual=0):
             return f"Ambas equipes pressionando no campo de ataque{vermelho}"
         return f"Jogo movimentado com chances nos dois lados{vermelho}"
 
-    if mercado == "LIMITEHT":
-        if jogo_aberto and total_chutes >= 8:
-            return f"Jogo aberto com muitas finalizações e sem gols{vermelho}"
-        if fav_perdendo and fav_chutes >= 6:
-            return f"{fav_label} perdendo e pressionando no campo ofensivo{vermelho}"
-        if fav_amassando:
-            return f"{fav_label} amassando em busca do empate{vermelho}"
-        if total_atq_perig >= 8:
-            return f"Alta pressão ofensiva nos minutos finais do 1º tempo{vermelho}"
-        return f"Pressão ofensiva para gol antes do intervalo{vermelho}"
-
     if mercado == "BTTS":
         if chutes_gol_h >= 2 and chutes_gol_a >= 1:
             return f"Ambas equipes com finalizações no alvo{vermelho}"
@@ -1511,7 +1499,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         linha = cantos_atual + 0.5
         entrada = f"Mais de {linha}🚩"
-    elif mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
+    elif mercado in ("HT", "BTTS", "OFT", "OVERGOAL"):
         if "Over" not in str(entrada) and "Ambas" not in str(entrada):
             if mercado == "OFT": entrada = "Over 1.5"
             elif mercado == "BTTS": entrada = "Ambas Marcam"
@@ -1595,7 +1583,6 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
     else:
         titles_map = {
             "HT": "OVER GOL INTERVALO",
-            "LIMITEHT": "OVER GOL LIMITE HT",
             "BTTS": "AMBAS MARCAM",
             "OFT": "OVER 1.5 GOLS PARTIDA",
             "OVERGOAL": "OVER GOL PARTIDA"
@@ -1686,7 +1673,7 @@ def checar_resultado(sinal):
         # Evita confirmar durante acrescimos do 1T (minuto 45-49 com status 1st)
         is_2h = (status in ('2nd', 'HT')) or (minute >= 50)
         
-        if not (is_final or (mercado in ["HT", "LIMITEHT", "CORNER_HT", "CORNER_HT2"] and is_2h)):
+        if not (is_final or (mercado in ["HT", "CORNER_HT", "CORNER_HT2"] and is_2h)):
             return None
         
         # Placar atual
@@ -1702,7 +1689,7 @@ def checar_resultado(sinal):
         total_ht = scores_ht
         
         # Lógica por Mercado
-        if mercado in ["HT", "LIMITEHT"]:
+        if mercado == "HT":
             return "green" if total_ht >= 1 else ("red" if (is_2h or is_final) else None)
         
         elif mercado == "BTTS":
@@ -2111,11 +2098,11 @@ def run():
         _appm_total = round(_apt_val / m, 2) if m > 0 else 0
         _appm_h = round(_aph_val / m, 2) if m > 0 else 0
         _appm_a = round(_apa_val / m, 2) if m > 0 else 0
-        # APPM universal — mínimo 0.70 em todos os mercados (anti-jogo morno)
-        appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4
-        appm_gols_ok  = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4
+        # APPM universal — mínimo 0.70 casa ou fora em todos os mercados (anti-jogo morno)
+        appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7
+        appm_gols_ok  = _appm_h >= 0.7 or _appm_a >= 0.7
         if not appm_valido:
-            print(f"[APPM-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.7/time ou 1.4 total)")
+            print(f"[APPM-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} (mín: 0.7 em casa ou fora)")
 
         # HISTÓRICO — Média de gols por partida (jogo todo) ≥ 2.5
         # Req. para: Over Gol HT, Over Gol FT e BTTS
@@ -2134,7 +2121,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_gols_ok:
-                print(f"[DIAG-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                print(f"[DIAG-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
                 print(f"[DIAG-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
             else:
@@ -2150,61 +2137,6 @@ def run():
                         sent.add(key); total_env += 1
                         registrar_sinal(fid, "HT", h, a, mid)
 
-        # MERCADO 1B: OVER GOL LIMITE HT (15-27 min, 0x0, odd fav ≤ 1.80, prob 1.5 FT ≥ 60%, prob 0.5 HT ≥ 50%, APPM casa/fora ≥ 0.7)
-        if p == 1 and 15 <= m <= 27 and sh == 0 and sa == 0 and red_fav == 0:
-            fid_raw = j.get("fid_raw")
-            odd_fav_num = get_odd_favorito_num(h, a, fid=fid, league=j.get("liga_slug", j.get("liga", "")), fid_raw=fid_raw)
-            
-            # APPM: ataques perigosos por minuto (casa OU fora ≥ 0.7)
-            appm_casa = _appm_h
-            appm_fora = _appm_a
-            appm_ht_ok = appm_casa >= 0.7 or appm_fora >= 0.7
-            
-            # Cálculo de probabilidades via chutes (se tiver)
-            chutes_tot_total = (stats.get("chutes_tot_h", 0) + stats.get("chutes_tot_a", 0)) if stats else 0
-            chutes_gol_total = (stats.get("chutes_gol_h", 0) + stats.get("chutes_gol_a", 0)) if stats else 0
-            prob_15_ft, prob_05_ht = calcular_prob_gols_ht(chutes_tot_total, chutes_gol_total, m)
-            
-            # Fallback: se não tem stats de chutes nem ataques, usa odd do favorito como proxy
-            if chutes_tot_total == 0 and odd_fav_num <= 1.80:
-                prob_15_ft = max(prob_15_ft, 65)
-                prob_05_ht = max(prob_05_ht, 55)
-                if not appm_ht_ok and _aph_val == 0 and _apa_val == 0:
-                    appm_ht_ok = True
-            
-            print(f"[LIMITE-HT] {h} x {a} | odd_fav={odd_fav_num} | prob_15ft={prob_15_ft}% | prob_05ht={prob_05_ht}% | appm_casa={appm_casa} appm_fora={appm_fora} | appm_ht_ok={appm_ht_ok}")
-            
-            # Diagnóstico detalhado
-            limite_ht_ok = True
-            if odd_fav_num > 1.80:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — odd do favorito {odd_fav_num} > 1.80, pulando")
-                limite_ht_ok = False
-            elif prob_15_ft < 60:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — prob 1.5 FT {prob_15_ft}% < 60%, pulando")
-                limite_ht_ok = False
-            elif prob_05_ht < 50:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — prob 0.5 HT {prob_05_ht}% < 50%, pulando")
-                limite_ht_ok = False
-            elif not appm_ht_ok:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — APPM casa/fora insuficiente (casa={appm_casa} fora={appm_fora}, precisa ≥0.7), pulando")
-                limite_ht_ok = False
-            elif not appm_gols_ok:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — APPM gols insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
-                limite_ht_ok = False
-            elif not hist_ok:
-                print(f"[DIAG-LIMITEHT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
-                limite_ht_ok = False
-            if limite_ht_ok:
-                hoje = datetime.now(BRT).strftime('%Y%m%d')
-                key = f"{dedup_id}_limiteht_{hoje}"
-                if key not in sent:
-                    ob365 = j.get("odds_b365", {}).get("o+0.5") if j.get("odds_b365") else None
-                    obano = j.get("odds_bano", {}).get("o+0.5") if j.get("odds_bano") else None
-                    mid = send_telegram(msg_universal(h, a, m, liga, pais, 4, "LIMITEHT", "Over 0.5", placar, stats=stats, sh=sh, sa=sa, fav_final=fav_final, odd_h=odd_h, odd_a=odd_a, odd_b365=ob365, odd_bano=obano), marca=key, home=h, away=a, odd_b365_val=ob365, odd_bano_val=obano)
-                    if mid:
-                        sent.add(key); total_env += 1
-                        registrar_sinal(fid, "LIMITEHT", h, a, mid)
-
         # MERCADO 2: AMBAS MARCAM BTTS (55-75 min, fav perdendo por 1, sem vermelho do fav, média hist ≥ 2.5)
         if p == 2 and 55 <= m <= 75 and ((sh == 1 and sa == 0) or (sh == 0 and sa == 1)):
             if not fav_perdendo_1:
@@ -2212,7 +2144,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-BTTS-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_gols_ok:
-                print(f"[DIAG-BTTS-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                print(f"[DIAG-BTTS-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
                 print(f"[DIAG-BTTS-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
             else:
@@ -2235,7 +2167,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-OFT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_gols_ok:
-                print(f"[DIAG-OFT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                print(f"[DIAG-OFT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
                 print(f"[DIAG-OFT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
             else:
@@ -2260,7 +2192,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_gols_ok:
-                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok:
                 print(f"[DIAG-OVERGOAL-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.5, pulando")
             else:
@@ -2297,7 +2229,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_valido:
-                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}, precisa ≥0.7/time ou ≥1.4 total), pulando")
+                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cht_{hoje}"
@@ -2365,7 +2297,7 @@ def run():
             elif red_fav != 0:
                 print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_valido:
-                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a} total={_appm_total}), pulando")
+                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cft_{hoje}"
