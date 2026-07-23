@@ -2096,11 +2096,11 @@ def run():
 
         # HISTÓRICO — Média de gols por partida (jogo todo)
         # Req. para: Over Gol HT, Over Gol FT e BTTS → ≥ 2.5
-        # Req. para: Escanteios HT/FT → ≥ 2.2
+        # Req. para: Escanteios HT/FT → ≥ 2.0
         # Fonte: própria API SokkerPro (medias_home_goal + medias_away_goal)
         media_hist = get_media_gols_historica_skp(h, a, stats)
         hist_ok = media_hist < 0 or media_hist >= 2.5  # -1 = sem dados históricos (não bloqueia)
-        hist_ok_corner = media_hist < 0 or media_hist >= 2.2  # Escanteios: limite mais baixo (2.2)
+        hist_ok_corner = media_hist < 0 or media_hist >= 2.0  # Escanteios: limite mais baixo (2.0)
         if not hist_ok:
             print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.5, pulando mercados de gol")
 
@@ -2213,7 +2213,7 @@ def run():
                     sent.add(key); total_env += 1
                     registrar_sinal(fid, "OVERGOAL", h, a, mid, extra_val=total_gols)
 
-        # MERCADO 5: ESCANTEIO ÁSIAT/LMT HT (32-38 min, fav empatando ou perdendo por 1, sem vermelho, APPM ≥ 0.7, média ≥ 2.2)
+        # MERCADO 5: ESCANTEIO ÁSIAT/LMT HT (32-38 min, fav empatando ou perdendo por 1, sem vermelho, APPM ≥ 0.7, média ≥ 2.0)
         if p == 1 and 32 <= m <= 38:
             corner_cond = corner_valido
             if not corner_cond:
@@ -2223,7 +2223,7 @@ def run():
             elif not appm_valido:
                 print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok_corner:
-                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
+                print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cht_{hoje}"
@@ -2243,7 +2243,7 @@ def run():
                     sent.add(key); total_env += 1
                     registrar_sinal(fid, "CORNER_HT", h, a, mid, extra_val=cantos)
 
-        # MERCADO 6: ESCANTEIO LIMITE FT (82-88 min, fav confirmado, empatando ou perdendo por 1, sem vermelho, APPM, média ≥ 2.2)
+        # MERCADO 6: ESCANTEIO LIMITE FT (82-88 min, fav confirmado, empatando ou perdendo por 1, sem vermelho, APPM, média ≥ 2.0)
         if p == 2 and 82 <= m <= 88:
             corner_ft_cond = corner_valido
             if not corner_ft_cond:
@@ -2253,7 +2253,7 @@ def run():
             elif not appm_valido:
                 print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
             elif not hist_ok_corner:
-                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
+                print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.0, pulando")
             else:
                 hoje = datetime.now(BRT).strftime('%Y%m%d')
                 key = f"{dedup_id}_cft_{hoje}"
