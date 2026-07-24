@@ -526,5 +526,11 @@
     "resultado": "red",
     "mercado": "OVERGOAL",
     "timestamp": "2026-07-23T23:45:22.512395-03:00"
+  },
+  {
+    "data": "2026-07-23",
+    "resultado": "red",
+    "mercado": "CORNER_FT",
+    "timestamp": "2026-07-23T23:45:25.101141-03:00"
   }
 ]
