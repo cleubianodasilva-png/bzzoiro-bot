@@ -1006,6 +1006,8 @@ def get_stats_sokkerpro_by_name(home, away):
                         "escanteios_a": _get_int(fix.get('visitorCorners', 0)),
                         "ataques_perigosos_h": _get_int(fix.get('localAttacksDangerousAttacks', 0)),
                         "ataques_perigosos_a": _get_int(fix.get('visitorAttacksDangerousAttacks', 0)),
+                        "medias_home_goal": _get_float(fix.get('medias_home_goal', 0)),
+                        "medias_away_goal": _get_float(fix.get('medias_away_goal', 0))
                     }
     except: pass
     return {}
@@ -1912,6 +1914,8 @@ def run():
         for k in ["escanteios_h","escanteios_a"]:
             stats.setdefault(k, -1)
         for k in ["red_cards_h","red_cards_a"]:
+            stats.setdefault(k, 0)
+        for k in ["medias_home_goal","medias_away_goal"]:
             stats.setdefault(k, 0)
 
         if stats:
